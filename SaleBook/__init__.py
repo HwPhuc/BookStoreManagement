@@ -15,7 +15,7 @@ app = Flask(
     static_folder=os.path.join(root_path, 'static')         # nơi chứa static (css, js, ảnh)
 )
 app.secret_key = "Us8k2s2@#*$jjudj^8&**tgfsgYFS677*&6s8suuuu"
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/bookstorev2?charset=utf8mb4" % quote('123456')
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/bookstorev2?charset=utf8mb4" % quote('Admin@123')
 app.config["PAGE_SIZE"] = 8
 
 db = SQLAlchemy(app=app)
@@ -29,5 +29,5 @@ cloudinary.config(
     secure=True
 )
 
-stripe.api_key = ''
-
+# stripe.api_key = 'sk_test_51QRAnrCIE1Wc5o2lkTkAnC8o8FVWn1XLfhVm8B5p63pQ3vaFSvMGR6mu4ORd5UQp5Yuudvg9EibVNAQQuyWBQU8I00PtcOTZln'
+stripe.api_key = 'sk_test_51Rh730CzIiKQCnsLBjAJFAV4tYBfcqkHJGcx2Kv7ieAWG9BN5da5lFbHCQemz3oKDDXu7hMUWzps2rzQCUcZJs2d00nAWC8AAK'

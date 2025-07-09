@@ -113,6 +113,10 @@ Hệ thống nhà sách
                         <input type="file" class="form-control" id="image" name="image">
                         <label for="image" class="form-label">Hình Ảnh</label>
                     </div>
+                    <div class="mb-4 form-floating">
+                        <input type="file" class="form-control" id="pdf_file" name="pdf_file" accept=".pdf">
+                        <label for="pdf_file" class="form-label">File PDF</label>
+                    </div>
                     <div class="mb-4">
                         <div class="d-flex">
                             <div class="form-floating w-100">
@@ -142,6 +146,10 @@ Hệ thống nhà sách
                             {% endfor %}
                         </select>
                         <label for="author" class="form-label">Tác giả</label>
+                    </div>
+                    <div class="mb-4 form-floating">
+                        <input type="number" class="form-control" id="trial_duration" name="trial_duration" value="300" min="0">
+                        <label for="trial_duration" class="form-label">Thời gian đọc thử (giây)</label>
                     </div>
                 </div>
                 <input type="text" class="form-control d-none" name="is_new" value="1">

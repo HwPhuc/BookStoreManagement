@@ -9,6 +9,16 @@ import stripe
 import json
 import os
 from SaleBook.models import UserRole
+import cloudinary
+
+
+# Cấu hình Cloudinary
+cloudinary.config(
+    cloud_name='drzc4fmxb',
+    api_key='422829951512966',
+    api_secret='ILJ11vG7Q7OqbjxyhWS1lNJMN5U'
+)
+
 
 login_manager.login_view = "/login"
 
@@ -121,6 +131,43 @@ def product_detail(book_name):
         return render_template('book_detail.html', book=book)
     else:
         return render_template('err_auth.html', err='Url này có vẻ không tồn tại!')
+
+
+#New
+# @app.route('/product/<int:book_id>/<book_name>')
+# def product_detail(book_id, book_name):
+#     book = dao.get_book_by_id(book_id)
+#     if book:
+#         return render_template('book_detail.html', book=book)
+#     return render_template('err_auth.html', err='Sách không tồn tại!')
+
+@app.route('/read_online/<int:book_id>')
+@login_required
+def read_online(book_id):
+    book = dao.get_book_by_id(book_id)
+    if book and book.online_content_url:
+        # Kiểm tra trạng thái mua sách
+        order = dao.get_order_by_user_and_book(current_user.id, book_id)
+        is_purchased = bool(order)
+
+        # Kiểm tra lịch sử đọc thử
+        has_tried = dao.check_trial_history(current_user.id, book_id)
+        trial_duration = None
+        if not is_purchased and not has_tried:
+            trial_duration = book.trial_duration
+            dao.add_trial_history(current_user.id, book_id)  # Ghi lại lịch sử đọc thử
+
+        return render_template('read_online.html',
+                               book=book,
+                               is_purchased=is_purchased,
+                               trial_duration=trial_duration,
+                               has_tried=has_tried)
+    return render_template('err_auth.html', err='Sách không tồn tại hoặc không có nội dung online!')
+
+
+@app.route('/check_auth')
+def check_auth():
+    return jsonify({'is_authenticated': current_user.is_authenticated})
 
 
 #Done
@@ -393,7 +440,8 @@ def create_checkout_session():
     else:
         return jsonify({'error': 'Invalid request'}), 404
 
-endpoint_secret = 'whsec_A9U55QVQ321PNAn1kT6HsEFCHiW0fZ2n'
+# endpoint_secret = 'whsec_A9U55QVQ321PNAn1kT6HsEFCHiW0fZ2n'
+endpoint_secret = 'whsec_Il5bQb8DmthVhFG2T2HVZ5kIsPeEYLti'
 
 # Done
 @app.route('/webhook', methods=['POST'])
@@ -534,9 +582,26 @@ def add_new_book():
 
         image = request.files.get('image')
 
-        image.save(os.path.join(app.root_path, 'static/uploads/', image.filename))
+        # image.save(os.path.join(app.root_path, 'static/uploads/', image.filename))
+        #
+        # image_url = 'static/uploads/' + image.filename
 
-        image_url = 'static/uploads/' + image.filename
+        # Upload ảnh lên Cloudinary
+        image_url = None
+        image = request.files.get('image')
+        if image:
+            res = cloudinary.uploader.upload(image, resource_type="image")
+            image_url = res.get('secure_url')
+
+        # Upload PDF lên Cloudinary
+        pdf_url = None
+        pdf_file = request.files.get('pdf_file')
+        if pdf_file:
+            res_pdf = cloudinary.uploader.upload(pdf_file, resource_type="raw")
+            pdf_url = res_pdf.get('secure_url')
+
+        trial_duration = request.form.get('trial_duration')
+        pdf_file = request.files.get('pdf_file')
 
         # for import_id, im in import_detail.items():  # Lặp qua các item trong dictionary
         #     if barcode == im["barcode"]: # Kiểm tra nếu barcode trùng
@@ -554,10 +619,12 @@ def add_new_book():
                 "quantity": quantity,
                 "description": description,
                 "image": image_url,
+                "pdf_file": pdf_url,
                 "barcode": barcode,
                 "category_id": category_id,
                 "author_id": author_id,
-                "is_new": is_new
+                "is_new": is_new,
+                "trial_duration": trial_duration
             }
 
         session[session_name] = import_details
@@ -662,7 +729,8 @@ def commit_import_book():
                 b = dao.add_new_book(name=import_detail['name'], price=import_detail['price'],
                                      quantity=import_detail['quantity'], description=import_detail['description'],
                                      barcode=import_detail['barcode'], category_id=import_detail['category_id'],
-                                     author_id=import_detail['author_id'], image=import_detail['image'])
+                                     author_id=import_detail['author_id'], image_url=import_detail['image'],
+                                     pdf_url=import_detail['pdf_file'])
                 dao.add_import_detail_book(quantity=import_detail['quantity'], unit_price=import_detail['price'],
                                            import_id=imp.id, book_id=b.id)
 
@@ -862,7 +930,7 @@ stop_run_continuously = run_continuously()
 if __name__ == "__main__":
     try:
         with app.app_context():
-            app.run(debug=True)
+            app.run(port=8000, debug=True)
     finally:
         stop_run_continuously.set()
         print("Stopped schedule thread")

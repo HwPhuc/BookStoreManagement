@@ -58,6 +58,9 @@
                         class="bi bi-cart"></i> Thêm vào giỏ
                     hàng
                 </button>
+                <a href="{{ url_for('read_online', book_id=book.id) }}" class="btn ms-4 text-truncate" style="border: 1px solid;" onclick="isAuthUser()">
+                    <i class="bi bi-book"></i> Đọc sách online
+                </a>
             </div>
         </div>
     </div>
@@ -236,9 +239,3 @@
     }
 </style>
 {% endblock %}
-
-
-
-
-
-

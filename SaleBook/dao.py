@@ -3,8 +3,10 @@ from datetime import datetime
 from SaleBook import app, db
 import hashlib
 from SaleBook.models import User, UserRole, Book, Category, Cart, Author, Order, OrderDetail, Import, \
-    ImportDetail, Regulation, OrderType, OrderStatus
+    ImportDetail, Regulation, OrderType, OrderStatus, TrialHistory
 import cloudinary.uploader
+from flask import request
+
 
 
 # add__ thêm mới
@@ -13,6 +15,14 @@ import cloudinary.uploader
 # count__ đếm số lượng
 # check__ kiểm tra tồn tại
 # access_check__ kiểm tra quyền truy cập
+
+
+# Cấu hình Cloudinary
+cloudinary.config(
+    cloud_name='drzc4fmxb',
+    api_key='422829951512966',
+    api_secret='ILJ11vG7Q7OqbjxyhWS1lNJMN5U'
+)
 
 
 # load sản phẩm cho trang chủ
@@ -46,12 +56,24 @@ def get_all_book():
     return Book.query.all()
 
 
-def add_new_book(name, price, quantity, description, barcode, category_id, author_id, image=None):
-    b = Book(name=name, price=price, stock_quantity=quantity, description=description, barcode=barcode,
-             category_id=category_id, author_id=author_id)
-    if image:
-        res = cloudinary.uploader.upload(image)
-        b.image = res.get('secure_url')
+def add_new_book(name, price, quantity, description, barcode, category_id, author_id, image_url =None, pdf_url=None):
+    b = Book(name=name,
+             price=price,
+             stock_quantity=quantity,
+             description=description,
+             barcode=barcode,
+             category_id=category_id,
+             author_id=author_id,
+             image=image_url,
+             online_content_url=pdf_url,
+             trial_duration=int(request.form.get('trial_duration', 300))
+             )
+    # if image:
+    #     res = cloudinary.uploader.upload(image)
+    #     b.image = res.get('secure_url')
+    # if pdf_file:
+    #     res_pdf = cloudinary.uploader.upload(pdf_file, resource_type="raw")
+    #     b.online_content_url = res_pdf.get('secure_url')
     db.session.add(b)
     db.session.commit()
     return b
@@ -365,6 +387,24 @@ def get_cancel_time():
     """Get the rule of system"""
     regulation = Regulation.query.get(3)
     return regulation.value
+
+
+#New
+def get_order_by_user_and_book(user_id, book_id):
+    return Order.query.join(OrderDetail).filter(
+        Order.customer_id == user_id,
+        OrderDetail.book_id == book_id,
+        Order.status == OrderStatus.SUCCESS).first()
+
+
+def check_trial_history(user_id, book_id):
+    return TrialHistory.query.filter_by(user_id=user_id, book_id=book_id).first()
+
+
+def add_trial_history(user_id, book_id):
+    trial = TrialHistory(user_id=user_id, book_id=book_id, trial_date=datetime.now())
+    db.session.add(trial)
+    db.session.commit()
 
 
 # # Báo cáo thống kê
