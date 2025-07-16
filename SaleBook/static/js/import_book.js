@@ -1,8 +1,26 @@
 // Gửi form đến server, server trả về session, cập nhật div với dữ liệu session
 // Thêm sách mới chưa có trong csdl
-document.getElementById('importForm').addEventListener('submit', function() {
-
+document.getElementById('importForm').addEventListener('submit', function(event) {
     event.preventDefault();  // Ngừng hành động mặc định của form
+
+    // Tính trial_duration từ các trường ngày/giờ/phút/giây
+    var days = parseInt(document.getElementById('trial_days').value) || 0;
+    var hours = parseInt(document.getElementById('trial_hours').value) || 0;
+    var minutes = parseInt(document.getElementById('trial_minutes').value) || 0;
+    var seconds = parseInt(document.getElementById('trial_seconds').value) || 0;
+    var totalSeconds = days * 86400 + hours * 3600 + minutes * 60 + seconds;
+
+    // Tạo hoặc cập nhật input ẩn trial_duration
+    let trialInput = document.getElementById('trial_duration');
+    if (!trialInput) {
+        trialInput = document.createElement('input');
+        trialInput.type = 'hidden';
+        trialInput.id = 'trial_duration';
+        trialInput.name = 'trial_duration';
+        this.appendChild(trialInput);
+    }
+    trialInput.value = totalSeconds;
+
     const quantity = parseInt(document.getElementById('quantity').value);
 
     if (quantity < window.min_book_per_import) {

@@ -268,7 +268,7 @@ if __name__ == '__main__':
                     "stock_quantity": 20,
                     "description": "Bộ truyện viết về những cuộc phiêu lưu phù thủy của cậu bé Harry Potter cùng hai người bạn thân là Ron Weasley và Hermione Granger",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/qctxm4xjuiuy5axe767q.jpg',
-                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752030485/rr6kemougjiu9pnxidoc.pdf",
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 },
@@ -278,7 +278,7 @@ if __name__ == '__main__':
                     "stock_quantity": 15,
                     "description": "Một câu chuyện thần thoại đầy hấp dẫn của J.R.R. Tolkien về cuộc chiến chống lại thế lực hắc ám Sauron.",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/qctxm4xjuiuy5axe767q.jpg',
-                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752030485/rr6kemougjiu9pnxidoc.pdf",
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 },
@@ -288,7 +288,7 @@ if __name__ == '__main__':
                     "stock_quantity": 50,
                     "description": "Tác phẩm kinh điển của F. Scott Fitzgerald mô tả cuộc sống giàu có và đau khổ ở thập kỷ 1920.",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/lik7dt77bsptgg5eakgq.jpg',
-                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752030485/rr6kemougjiu9pnxidoc.pdf",
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 },
@@ -298,7 +298,7 @@ if __name__ == '__main__':
                     "stock_quantity": 40,
                     "description": "Cuốn sách đoạt giải Pulitzer của Harper Lee về cuộc đấu tranh chống phân biệt chủng tộc.",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/lik7dt77bsptgg5eakgq.jpg',
-                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752030485/rr6kemougjiu9pnxidoc.pdf",
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 },
@@ -308,7 +308,7 @@ if __name__ == '__main__':
                     "stock_quantity": 30,
                     "description": "George Orwell vẽ ra một thế giới dystopian đầy ám ảnh.",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/g0b1ypwqdp3ron415wcv.jpg',
-                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752030485/rr6kemougjiu9pnxidoc.pdf",
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 },
@@ -318,7 +318,7 @@ if __name__ == '__main__':
                     "stock_quantity": 25,
                     "description": "Tác phẩm lãng mạn nổi tiếng của Jane Austen kể về tình yêu và sự hiểu lầm.",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/g0b1ypwqdp3ron415wcv.jpg',
-                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752030485/rr6kemougjiu9pnxidoc.pdf",
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 },
@@ -328,7 +328,7 @@ if __name__ == '__main__':
                     "stock_quantity": 10,
                     "description": "Hành trình đầy bi kịch và phiêu lưu của thuyền trưởng Ahab do Herman Melville kể.",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/lik7dt77bsptgg5eakgq.jpg',
-                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752030485/rr6kemougjiu9pnxidoc.pdf",
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 },
@@ -338,7 +338,7 @@ if __name__ == '__main__':
                     "stock_quantity": 20,
                     "description": "Cuốn tiểu thuyết của J.D. Salinger về sự nổi loạn tuổi trẻ.",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/g0b1ypwqdp3ron415wcv.jpg',
-                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752030485/rr6kemougjiu9pnxidoc.pdf",
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 },
@@ -348,7 +348,7 @@ if __name__ == '__main__':
                     "stock_quantity": 12,
                     "description": "Một tác phẩm vĩ đại của Leo Tolstoy về cuộc chiến và tình yêu ở nước Nga.",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/qctxm4xjuiuy5axe767q.jpg',
-                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752030485/rr6kemougjiu9pnxidoc.pdf",
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 },
@@ -358,7 +358,7 @@ if __name__ == '__main__':
                     "stock_quantity": 18,
                     "description": "Dostoevsky viết về tội ác và sự cứu chuộc đầy triết lý và sâu sắc.",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/g0b1ypwqdp3ron415wcv.jpg',
-                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752030485/rr6kemougjiu9pnxidoc.pdf",
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 }

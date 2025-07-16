@@ -16,7 +16,7 @@
             </div>
         {% elif trial_duration %}
             <div id="trial-message" class="alert alert-info montserrat">
-                Bạn đang đọc thử miễn phí. Thời gian còn lại: <span id="trial-timer"></span> giây.
+                Bạn đang đọc thử miễn phí. Thời gian còn lại: <span id="trial-timer">{{ trial_duration }}</span>.
                 <a href="{{ url_for('product_detail', book_name=book.name, book_id=book.id) }}">Mua sách để đọc tiếp!</a>
             </div>
         {% endif %}
@@ -148,9 +148,21 @@
                 var timerElement = document.getElementById('trial-timer');
                 var trialMessage = document.getElementById('trial-message');
 
+                function formatTime(seconds) {
+                    var days = Math.floor(seconds / (24 * 3600));
+                    seconds %= (24 * 3600);
+                    var hours = Math.floor(seconds / 3600);
+                    seconds %= 3600;
+                    var minutes = Math.floor(seconds / 60);
+                    seconds %= 60;
+                    return `${days} ngày ${hours} giờ ${minutes} phút ${seconds} giây`;
+                }
+
+                timerElement.textContent = formatTime(timeLeft);
+
                 var countdown = setInterval(function() {
                     timeLeft--;
-                    timerElement.textContent = timeLeft;
+                    timerElement.textContent = formatTime(timeLeft);
 
                     if (timeLeft <= 0) {
                         clearInterval(countdown);

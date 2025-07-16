@@ -10,6 +10,7 @@ import json
 import os
 from SaleBook.models import UserRole
 import cloudinary
+from datetime import datetime, timedelta
 
 
 # Cấu hình Cloudinary
@@ -146,22 +147,29 @@ def product_detail(book_name):
 def read_online(book_id):
     book = dao.get_book_by_id(book_id)
     if book and book.online_content_url:
-        # Kiểm tra trạng thái mua sách
         order = dao.get_order_by_user_and_book(current_user.id, book_id)
         is_purchased = bool(order)
 
-        # Kiểm tra lịch sử đọc thử
+        # Kiểm tra lịch sử đọc thử và còn hạn không
         has_tried = dao.check_trial_history(current_user.id, book_id)
         trial_duration = None
-        if not is_purchased and not has_tried:
-            trial_duration = book.trial_duration
-            dao.add_trial_history(current_user.id, book_id)  # Ghi lại lịch sử đọc thử
+        trial_active = False
+        seconds_left = None
+
+        if not is_purchased:
+            if not has_tried:
+                # Chưa từng đọc thử, ghi nhận lịch sử
+                dao.add_trial_history(current_user.id, book_id)
+                trial_active, seconds_left = True, book.trial_duration
+            else:
+                trial_active, seconds_left = dao.is_trial_active(current_user.id, book_id)
+            trial_duration = seconds_left if trial_active else None
 
         return render_template('read_online.html',
                                book=book,
                                is_purchased=is_purchased,
                                trial_duration=trial_duration,
-                               has_tried=has_tried)
+                               has_tried=has_tried and not trial_active)
     return render_template('err_auth.html', err='Sách không tồn tại hoặc không có nội dung online!')
 
 
@@ -176,9 +184,13 @@ def add_to_cart_api():
     if not current_user.is_authenticated:
         return jsonify({"error": "User not authenticated"}), 401  # Nếu người dùng chưa đăng nhập
 
-    book_id = request.json.get('book_id')
-    customer_id = request.json.get('customer_id')
-    quantity = int(request.json.get('quantity', 1))
+    # book_id = request.json.get('book_id')
+    # customer_id = request.json.get('customer_id')
+    # quantity = int(request.json.get('quantity', 1))
+
+    book_id = request.get_json('book_id')
+    customer_id = request.get_json('customer_id')
+    quantity = int(request.get_json('quantity', 1))
 
     if not book_id or not customer_id or quantity < 1:
         return jsonify({"error": "Invalid data"}), 400  # Kiểm tra dữ liệu hợp lệ
@@ -600,7 +612,7 @@ def add_new_book():
             res_pdf = cloudinary.uploader.upload(pdf_file, resource_type="raw")
             pdf_url = res_pdf.get('secure_url')
 
-        trial_duration = request.form.get('trial_duration')
+        trial_duration = int(request.form.get('trial_duration') or 0)
         pdf_file = request.files.get('pdf_file')
 
         # for import_id, im in import_detail.items():  # Lặp qua các item trong dictionary
@@ -726,11 +738,19 @@ def commit_import_book():
                                            import_id=imp.id, book_id=import_detail['book_id'])
 
             if int(import_detail['is_new']) == 1:
-                b = dao.add_new_book(name=import_detail['name'], price=import_detail['price'],
-                                     quantity=import_detail['quantity'], description=import_detail['description'],
-                                     barcode=import_detail['barcode'], category_id=import_detail['category_id'],
-                                     author_id=import_detail['author_id'], image_url=import_detail['image'],
-                                     pdf_url=import_detail['pdf_file'])
+                trial_duration = import_detail.get('trial_duration')
+                b = dao.add_new_book(
+                    name=import_detail['name'],
+                    price=import_detail['price'],
+                    quantity=import_detail['quantity'],
+                    description=import_detail['description'],
+                    barcode=import_detail['barcode'],
+                    category_id=import_detail['category_id'],
+                    author_id=import_detail['author_id'],
+                    image_url=import_detail['image'],
+                    pdf_url=import_detail['pdf_file'],
+                    trial_duration=trial_duration
+                )
                 dao.add_import_detail_book(quantity=import_detail['quantity'], unit_price=import_detail['price'],
                                            import_id=imp.id, book_id=b.id)
 

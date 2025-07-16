@@ -1,5 +1,4 @@
-from datetime import datetime
-
+from datetime import datetime, timedelta
 from SaleBook import app, db
 import hashlib
 from SaleBook.models import User, UserRole, Book, Category, Cart, Author, Order, OrderDetail, Import, \
@@ -56,24 +55,19 @@ def get_all_book():
     return Book.query.all()
 
 
-def add_new_book(name, price, quantity, description, barcode, category_id, author_id, image_url =None, pdf_url=None):
-    b = Book(name=name,
-             price=price,
-             stock_quantity=quantity,
-             description=description,
-             barcode=barcode,
-             category_id=category_id,
-             author_id=author_id,
-             image=image_url,
-             online_content_url=pdf_url,
-             trial_duration=int(request.form.get('trial_duration', 300))
-             )
-    # if image:
-    #     res = cloudinary.uploader.upload(image)
-    #     b.image = res.get('secure_url')
-    # if pdf_file:
-    #     res_pdf = cloudinary.uploader.upload(pdf_file, resource_type="raw")
-    #     b.online_content_url = res_pdf.get('secure_url')
+def add_new_book(name, price, quantity, description, barcode, category_id, author_id, image_url=None, pdf_url=None, trial_duration=300):
+    b = Book(
+        name=name,
+        price=price,
+        stock_quantity=quantity,
+        description=description,
+        barcode=barcode,
+        category_id=category_id,
+        author_id=author_id,
+        image=image_url,
+        online_content_url=pdf_url,
+        trial_duration=trial_duration
+    )
     db.session.add(b)
     db.session.commit()
     return b
@@ -406,6 +400,42 @@ def add_trial_history(user_id, book_id):
     db.session.add(trial)
     db.session.commit()
 
+
+def is_trial_active(user_id, book_id):
+    trial = TrialHistory.query.filter_by(user_id=user_id, book_id=book_id).first()
+    if not trial:
+        return False, None
+    book = Book.query.get(book_id)
+    if not book or not book.trial_duration:
+        return False, None
+    # trial_duration lưu số giây, đổi sang timedelta
+    expire_time = trial.trial_date + timedelta(seconds=book.trial_duration)
+    now = datetime.now()
+    if now < expire_time:
+        seconds_left = int((expire_time - now).total_seconds())
+        return True, seconds_left
+    return False, 0
+
+
+def auto_cancel_trial():
+    now = datetime.now()
+    trials = TrialHistory.query.all()
+    for trial in trials:
+        book = Book.query.get(trial.book_id)
+        if not book or not book.trial_duration:
+            continue
+        expire_time = trial.trial_date + timedelta(seconds=book.trial_duration)
+        if now > expire_time:
+            # Xóa lịch sử đọc thử đã hết hạn
+            db.session.delete(trial)
+    db.session.commit()
+
+
+def cancel_order_with_app_context():
+    with app.app_context():
+        auto_cancel_order()
+        auto_cancel_trial()
+        
 
 # # Báo cáo thống kê
 # from sqlalchemy import func, extract
