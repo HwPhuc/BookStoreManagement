@@ -113,6 +113,10 @@ Hệ thống nhà sách
                         <input type="file" class="form-control" id="image" name="image">
                         <label for="image" class="form-label">Hình Ảnh</label>
                     </div>
+                    <div class="mb-4 form-floating">
+                        <input type="file" class="form-control" id="pdf_file" name="pdf_file" accept=".pdf">
+                        <label for="pdf_file" class="form-label">File PDF</label>
+                    </div>
                     <div class="mb-4">
                         <div class="d-flex">
                             <div class="form-floating w-100">
@@ -143,6 +147,29 @@ Hệ thống nhà sách
                         </select>
                         <label for="author" class="form-label">Tác giả</label>
                     </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Thời gian đọc thử</label>
+                        <div class="d-flex gap-2 align-items-end">
+                            <div class="text-center">
+                                <label for="trial_days" class="small">Ngày</label>
+                                <input type="number" class="form-control" id="trial_days" name="trial_days" value="0" min="0" style="width: 80px;">
+                            </div>
+                            <div class="text-center">
+                                <label for="trial_hours" class="small">Giờ</label>
+                                <input type="number" class="form-control" id="trial_hours" name="trial_hours" value="0" min="0" max="23" style="width: 80px;">
+                            </div>
+                            <div class="text-center">
+                                <label for="trial_minutes" class="small">Phút</label>
+                                <input type="number" class="form-control" id="trial_minutes" name="trial_minutes" value="0" min="0" max="59" style="width: 80px;">
+                            </div>
+                            <div class="text-center">
+                                <label for="trial_seconds" class="small">Giây</label>
+                                <input type="number" class="form-control" id="trial_seconds" name="trial_seconds" value="0" min="0" max="59" style="width: 80px;">
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
                 <input type="text" class="form-control d-none" name="is_new" value="1">
                 <input type="text" class="form-control d-none" name="session_name" value="import_detail">
@@ -284,4 +311,3 @@ Hệ thống nhà sách
     }
 </style>
 {% endblock %}
-

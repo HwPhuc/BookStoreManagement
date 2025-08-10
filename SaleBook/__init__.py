@@ -29,5 +29,5 @@ cloudinary.config(
     secure=True
 )
 
-stripe.api_key = ''
+stripe.api_key = 'sk_test_51QRAnrCIE1Wc5o2lkTkAnC8o8FVWn1XLfhVm8B5p63pQ3vaFSvMGR6mu4ORd5UQp5Yuudvg9EibVNAQQuyWBQU8I00PtcOTZln'
 

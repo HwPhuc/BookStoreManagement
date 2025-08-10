@@ -1,0 +1,47 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}
+Lịch sử giao dịch
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="container" >
+        <h1 class="text-center mb-4">Lịch sử giao dịch</h1>
+            {% if wallet_logs %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover text-center align-middle">
+                    <thead class="">
+                    <tr class="bg-sp table-secondary">
+                        <th>Loại giao dịch</th>
+                        <th>Số tiền (VNĐ)</th>
+                        <th>Số dư sau giao dịch (VNĐ)</th>
+                        <th>Thời gian</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for w in wallet_logs %}
+                    <tr>
+                        <td>
+                            {% if w.transaction_type.name == 'TOP_UP' %}
+                            <span class="badge bg-success">Nạp tiền</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ w.transaction_type.name }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ "{:,.0f}".format(w.amount) }}</td>
+                        <td>{{ "{:,.0f}".format(w.balance_after) }}</td>
+                        <td>{{ w.created_at.strftime("%H:%M %d/%m/%Y") }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert bg-sp text-center">
+                Không có giao dịch nào
+            </div>
+            {% endif %}
+    </div>
+</div>
+{% endblock %}
