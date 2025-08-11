@@ -907,6 +907,7 @@ def sale_history():
 import threading
 import time
 import schedule
+import atexit
 
 def run_continuously(interval=1):
     """Continuously run, while executing pending jobs at each
@@ -942,10 +943,10 @@ schedule.every(1).minute.do(cancel_order_with_app_context)
 
 stop_run_continuously = run_continuously()
 
-# @atexit.register
-# def shutdown_schedule():
-#     print('Shutdown schedule before app shutdown')
-#     stop_run_continuously.set()
+@atexit.register
+def shutdown_schedule():
+    print('Shutdown schedule before app shutdown')
+    stop_run_continuously.set()
 
 if __name__ == "__main__":
     try:
