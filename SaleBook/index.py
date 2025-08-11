@@ -9,8 +9,17 @@ import stripe
 import json
 import os
 from SaleBook.models import UserRole
-import cloudinary.uploader
+import cloudinary
 from datetime import datetime, timedelta
+
+
+# Cấu hình Cloudinary
+cloudinary.config(
+    cloud_name='drzc4fmxb',
+    api_key='422829951512966',
+    api_secret='ILJ11vG7Q7OqbjxyhWS1lNJMN5U'
+)
+
 
 login_manager.login_view = "/login"
 
@@ -185,14 +194,19 @@ def check_auth():
     return jsonify({'is_authenticated': current_user.is_authenticated})
 
 
+#Done
 @app.route('/api/carts', methods=['POST'])
 def add_to_cart_api():
     if not current_user.is_authenticated:
         return jsonify({"error": "User not authenticated"}), 401  # Nếu người dùng chưa đăng nhập
 
-    book_id = request.json.get('book_id')
-    customer_id = request.json.get('customer_id')
-    quantity = int(request.json.get('quantity', 1))
+    # book_id = request.json.get('book_id')
+    # customer_id = request.json.get('customer_id')
+    # quantity = int(request.json.get('quantity', 1))
+
+    book_id = request.get_json('book_id')
+    customer_id = request.get_json('customer_id')
+    quantity = int(request.get_json('quantity', 1))
 
     # book_id = request.get_json('book_id')
     # customer_id = request.get_json('customer_id')
@@ -490,7 +504,9 @@ def create_top_up():
         return jsonify({'error': 'Invalid request'}), 400
 
 
-endpoint_secret = 'whsec_A9U55QVQ321PNAn1kT6HsEFCHiW0fZ2n'
+# endpoint_secret = 'whsec_A9U55QVQ321PNAn1kT6HsEFCHiW0fZ2n'
+endpoint_secret = 'whsec_Il5bQb8DmthVhFG2T2HVZ5kIsPeEYLti'
+
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -657,6 +673,9 @@ def add_new_book():
         if pdf_file:
             res_pdf = cloudinary.uploader.upload(pdf_file, resource_type="raw")
             pdf_url = res_pdf.get('secure_url')
+
+        trial_duration = int(request.form.get('trial_duration') or 0)
+        pdf_file = request.files.get('pdf_file')
 
         trial_duration = int(request.form.get('trial_duration') or 0)
 
@@ -936,6 +955,7 @@ def sale_history():
 import threading
 import time
 import schedule
+import atexit
 
 
 def run_continuously(interval=1):
@@ -972,15 +992,15 @@ schedule.every(1).minute.do(cancel_order_with_app_context)
 
 stop_run_continuously = run_continuously()
 
-# @atexit.register
-# def shutdown_schedule():
-#     print('Shutdown schedule before app shutdown')
-#     stop_run_continuously.set()
+@atexit.register
+def shutdown_schedule():
+    print('Shutdown schedule before app shutdown')
+    stop_run_continuously.set()
 
 if __name__ == "__main__":
     try:
         with app.app_context():
-            app.run(debug=True)
+            app.run(port=8000, debug=True)
     finally:
         stop_run_continuously.set()
         print("Stopped schedule thread")

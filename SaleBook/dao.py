@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
-
 from SaleBook import app, db
 import hashlib
 from SaleBook.models import User, UserRole, Book, Category, Cart, Author, Order, OrderDetail, Import, \
     ImportDetail, Regulation, OrderType, OrderStatus, WalletLog, TransactionType, TrialHistory
 import cloudinary.uploader
+from flask import request
+
 
 
 # add__ thêm mới
@@ -14,6 +15,14 @@ import cloudinary.uploader
 # check__ kiểm tra tồn tại
 # access_check__ kiểm tra quyền truy cập
 page_size = app.config["PAGE_SIZE"]
+
+# Cấu hình Cloudinary
+cloudinary.config(
+    cloud_name='drzc4fmxb',
+    api_key='422829951512966',
+    api_secret='ILJ11vG7Q7OqbjxyhWS1lNJMN5U'
+)
+
 
 # load sản phẩm cho trang chủ
 def load_book(kw=None, page=1):
@@ -52,6 +61,21 @@ def add_new_book(name, price, quantity, description, barcode, category_id, autho
     # if image:
     #     res = cloudinary.uploader.upload(image)
     #     b.image = res.get('secure_url')
+
+# def add_new_book(name, price, quantity, description, barcode, category_id, author_id, image_url=None, pdf_url=None, trial_duration=300):
+#     b = Book(
+#         name=name,
+#         price=price,
+#         stock_quantity=quantity,
+#         description=description,
+#         barcode=barcode,
+#         category_id=category_id,
+#         author_id=author_id,
+#         image=image_url,
+#         online_content_url=pdf_url,
+#         trial_duration=trial_duration
+#     )
+
     db.session.add(b)
     db.session.commit()
     return b
@@ -470,106 +494,106 @@ def cancel_order_with_app_context():
     with app.app_context():
         auto_cancel_order()
         auto_cancel_trial()
+        
+
+# Báo cáo thống kê
+from sqlalchemy import func, extract
 
 
-# # Báo cáo thống kê
-# from sqlalchemy import func, extract
-#
-#
-# def invoice_stats(kw=None, from_date=None, to_date=None):
-#     p = db.session.query(Book.id, Book.name, func.sum(InvoiceDetail.quantity * InvoiceDetail.unit_price)) \
-#         .join(InvoiceDetail, InvoiceDetail.book_id.__eq__(Book.id), isouter=True) \
-#         .join(Invoice, Invoice.id.__eq__(InvoiceDetail.invoice_id)) \
-#         .group_by(Book.id, Book.name)
-#
-#     if kw:
-#         p.filter(Book.name.contains(kw))
-#
-#     return p.all()
-#
-#
-# def order_stats(kw=None, from_date=None, to_date=None):
-#     p = db.session.query(
-#         Category.name,
-#         func.sum(OrderDetail.quantity * OrderDetail.unit_price).label('total_revenue')
-#     ).join(Book, Book.id == OrderDetail.book_id) \
-#         .join(Category, Category.id == Book.category_id) \
-#         .join(Order, Order.id == OrderDetail.order_id) \
-#         .filter(Order.status == 'SUCCESS') \
-#         .group_by(Category.name) \
-#
-#     if kw:
-#         p.filter(Book.name.contains(kw))
-#
-#     return p.all()
-#
-#
-# def get_stats_online(year, month, kw=None):
-#     results = db.session.query(
-#         Category.name.label('category_name'),
-#         func.sum(OrderDetail.quantity * OrderDetail.unit_price).label('revenue'),
-#         func.sum(OrderDetail.quantity).label('rental_count')
-#     ).join(Book, Book.id == OrderDetail.book_id) \
-#         .join(Category, Category.id == Book.category_id) \
-#         .join(Order, Order.id == OrderDetail.order_id) \
-#         .filter(
-#         Order.status == 'SUCCESS',
-#         extract('year', Order.order_date) == year,
-#         extract('month', Order.order_date) == month
-#     ).group_by(Category.name)
-#
-#     # Tính tổng doanh thu
-#     total_revenue = sum([row.revenue for row in results])
-#
-#     if kw:
-#         results = results.filter(Category.name.ilike(f'%{kw}%'))
-#
-#     results = results.all()
-#
-#     # Thêm tỷ lệ doanh thu
-#     report = []
-#     for row in results:
-#         percentage = (row.revenue / total_revenue * 100) if total_revenue > 0 else 0
-#         report.append({
-#             'category_name': row.category_name,
-#             'revenue': row.revenue,
-#             'rental_count': row.rental_count,
-#             'percentage': percentage
-#         })
-#
-#     return report, total_revenue
-#
-#
-# def get_stats_store(year, month, kw=None):
-#     results = db.session.query(
-#         Category.name.label('category_name'),
-#         func.sum(InvoiceDetail.quantity * InvoiceDetail.unit_price).label('revenue'),
-#         func.sum(InvoiceDetail.quantity).label('rental_count')
-#     ).join(Book, Book.id == InvoiceDetail.book_id) \
-#         .join(Category, Category.id == Book.category_id) \
-#         .join(Invoice, Invoice.id == InvoiceDetail.invoice_id) \
-#         .filter(
-#         extract('year', Invoice.created_date) == year,
-#         extract('month', Invoice.created_date) == month
-#     ).group_by(Category.name)
-#
-#     # Tính tổng doanh thu
-#     total_revenue = sum([row.revenue for row in results])
-#
-#     if kw:
-#         results = results.filter(Category.name.ilike(f'%{kw}%'))
-#
-#     results = results.all()
-#
-#     # Thêm tỷ lệ doanh thu
-#     report = []
-#     for row in results:
-#         percentage = (row.revenue / total_revenue * 100) if total_revenue > 0 else 0
-#         report.append({
-#             'category_name': row.category_name,
-#             'revenue': row.revenue,
-#             'rental_count': row.rental_count,
-#             'percentage': percentage
-#         })
-#
-#     return report, total_revenue
+def invoice_stats(kw=None, from_date=None, to_date=None):
+    p = db.session.query(Book.id, Book.name, func.sum(OrderDetail.quantity * OrderDetail.unit_price)) \
+        .join(OrderDetail, OrderDetail.book_id.__eq__(Book.id), isouter=True) \
+        .join(Order, Order.id.__eq__(OrderDetail.id)) \
+        .group_by(Book.id, Book.name)
+
+    if kw:
+        p.filter(Book.name.contains(kw))
+
+    return p.all()
+
+
+def order_stats(kw=None, from_date=None, to_date=None):
+    p = db.session.query(
+        Category.name,
+        func.sum(OrderDetail.quantity * OrderDetail.unit_price).label('total_revenue')
+    ).join(Book, Book.id == OrderDetail.book_id) \
+        .join(Category, Category.id == Book.category_id) \
+        .join(Order, Order.id == OrderDetail.order_id) \
+        .filter(Order.status == 'SUCCESS') \
+        .group_by(Category.name) \
+
+    if kw:
+        p.filter(Book.name.contains(kw))
+
+    return p.all()
+
+
+def get_stats_online(year, month, kw=None):
+    results = db.session.query(
+        Category.name.label('category_name'),
+        func.sum(OrderDetail.quantity * OrderDetail.unit_price).label('revenue'),
+        func.sum(OrderDetail.quantity).label('rental_count')
+    ).join(Book, Book.id == OrderDetail.book_id) \
+        .join(Category, Category.id == Book.category_id) \
+        .join(Order, Order.id == OrderDetail.order_id) \
+        .filter(
+        Order.status == 'SUCCESS',
+        extract('year', Order.created_at) == year,
+        extract('month', Order.created_at) == month
+    ).group_by(Category.name)
+
+    # Tính tổng doanh thu
+    total_revenue = sum([row.revenue for row in results])
+
+    if kw:
+        results = results.filter(Category.name.ilike(f'%{kw}%'))
+
+    results = results.all()
+
+    # Thêm tỷ lệ doanh thu
+    report = []
+    for row in results:
+        percentage = (row.revenue / total_revenue * 100) if total_revenue > 0 else 0
+        report.append({
+            'category_name': row.category_name,
+            'revenue': row.revenue,
+            'rental_count': row.rental_count,
+            'percentage': percentage
+        })
+
+    return report, total_revenue
+
+
+def get_stats_store(year, month, kw=None):
+    results = db.session.query(
+        Category.name.label('category_name'),
+        func.sum(OrderDetail.quantity * OrderDetail.unit_price).label('revenue'),
+        func.sum(OrderDetail.quantity).label('rental_count')
+    ).join(Book, Book.id == OrderDetail.book_id) \
+        .join(Category, Category.id == Book.category_id) \
+        .join(Order, Order.id == OrderDetail.id) \
+        .filter(
+        extract('year', Order.created_at) == year,
+        extract('month', Order.created_at) == month
+    ).group_by(Category.name)
+
+    # Tính tổng doanh thu
+    total_revenue = sum([row.revenue for row in results])
+
+    if kw:
+        results = results.filter(Category.name.ilike(f'%{kw}%'))
+
+    results = results.all()
+
+    # Thêm tỷ lệ doanh thu
+    report = []
+    for row in results:
+        percentage = (row.revenue / total_revenue * 100) if total_revenue > 0 else 0
+        report.append({
+            'category_name': row.category_name,
+            'revenue': row.revenue,
+            'rental_count': row.rental_count,
+            'percentage': percentage
+        })
+
+    return report, total_revenue
