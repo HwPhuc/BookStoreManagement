@@ -131,34 +131,37 @@
 
 {% block js_internal %}
 <script>
-    document.getElementById("paymentInCart").addEventListener("click", function() {
-        var isValid = true;
+    paymentBtn = document.getElementById("paymentInCart");
+    if (paymentBtn) {
+        paymentBtn.addEventListener("click", function() {
+            var isValid = true;
 
-        {% for c in cart %}
-            let quantity_{{c.id}} = document.getElementById("{{c.id}}").value;
+            {% for c in cart %}
+                let quantity_{{c.id}} = document.getElementById("{{c.id}}").value;
 
-            if ( quantity_{{c.id}} > {{ c.books.stock_quantity }}) {
-                alert('Số lượng tối đa còn lại của {{ c.books.name }} là ' + {{ c.books.stock_quantity }} + '\nXin lỗi vì sự bất tiện này');
-                document.getElementById("{{c.id}}").value = {{ c.books.stock_quantity }};
-                changeCart({{c.id}}, document.getElementById("{{c.id}}").value, {{c.customer_id}}, {{ c.books.stock_quantity }});
-                isValid = false;
-            }
-        {% endfor %}
+                if ( quantity_{{c.id}} > {{ c.books.stock_quantity }}) {
+                    alert('Số lượng tối đa còn lại của {{ c.books.name }} là ' + {{ c.books.stock_quantity }} + '\nXin lỗi vì sự bất tiện này');
+                    document.getElementById("{{c.id}}").value = {{ c.books.stock_quantity }};
+                    changeCart({{c.id}}, document.getElementById("{{c.id}}").value, {{c.customer_id}}, {{ c.books.stock_quantity }});
+                    isValid = false;
+                }
+            {% endfor %}
 
-        if (isValid) {
-            var paymentMethod = document.getElementById("paymentMethod").value;
-            if (paymentMethod == "credit") {
-                payment(null, null, {{ current_user.id }});
-                return;
+            if (isValid) {
+                var paymentMethod = document.getElementById("paymentMethod").value;
+                if (paymentMethod == "credit") {
+                    payment(null, null, {{ current_user.id }});
+                    return;
+                }
+                if (paymentMethod == "cash") {
+                    checkoutOffline(null, null, {{ current_user.id }});
+                    var myModal = bootstrap.Modal.getInstance(document.getElementById('muaNgayModal'));
+                    myModal.hide();
+                    return;
+                }
             }
-            if (paymentMethod == "cash") {
-                checkoutOffline(null, null, {{ current_user.id }});
-                var myModal = bootstrap.Modal.getInstance(document.getElementById('muaNgayModal'));
-                myModal.hide();
-                return;
-            }
-        }
-    });
+        });
+    }
 
     function toggleCreditFields() {
         const paymentMethod = document.getElementById('paymentMethod').value;

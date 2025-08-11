@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from sqlalchemy import Column, Integer, String, Enum, ForeignKey, DateTime, Boolean, Double, Date
+from sqlalchemy import Column, Integer, String, Enum, ForeignKey, DateTime, Boolean, Double, Date, Text
 from sqlalchemy.orm import relationship
 
 from SaleBook import db, app
@@ -57,6 +57,7 @@ class User(db.Model, UserMixin):
     is_active = Column(Boolean, default=True)
     avatar = Column(String(150),
                     default='https://res.cloudinary.com/drzc4fmxb/image/upload/v1733907010/xvethjfe9cycrroqi7po.jpg')
+    created_at = Column(DateTime, default=datetime.now)
     user_role = Column(Enum(UserRole), default=UserRole.CUSTOMER)
     balance = Column(Double, default=0) # Số tiền trong trong ví
 
@@ -84,8 +85,21 @@ class Book(db.Model):
     category = relationship('Category', backref='books', lazy=True)
     author = relationship('Author', backref='books', lazy=True)
 
+    online_content_url = Column(String(255), nullable=True)
+    trial_duration = db.Column(db.Integer, nullable=True, default=300)
+
     def __str__(self):
         return self.name
+
+
+#New
+class TrialHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    book_id = db.Column(db.Integer, db.ForeignKey('book.id'), nullable=False)
+    trial_date = db.Column(db.DateTime, default=datetime.now)
+
+    __table_args__ = (db.UniqueConstraint('user_id', 'book_id', name='unique_user_book_trial'),)
 
 
 class Author(db.Model):
@@ -104,14 +118,14 @@ class Category(db.Model):
 
     def __str__(self):
         return self.name
-    
+
 
 class Rental(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     created_at = Column(DateTime, default=datetime.now)
     due = Column(Integer, nullable=False) # Thời hạn thuê (hours)
     price = Column(Integer, nullable=False)
-    is_active = Column(Boolean, default=True)
+    is_active = Column(Boolean, default=True) # User còn được đọc không
 
     book_id = Column(Integer, ForeignKey('book.id'), nullable=False)
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
@@ -222,6 +236,7 @@ class Cart(db.Model):
 if __name__ == '__main__':
     try:
         with app.app_context():
+            db.drop_all()
             db.create_all()
 
             r1 = Regulation(name='Số lượng nhập tối thiểu', value=150)
@@ -255,6 +270,7 @@ if __name__ == '__main__':
                     "stock_quantity": 20,
                     "description": "Bộ truyện viết về những cuộc phiêu lưu phù thủy của cậu bé Harry Potter cùng hai người bạn thân là Ron Weasley và Hermione Granger",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/qctxm4xjuiuy5axe767q.jpg',
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 },
@@ -264,6 +280,7 @@ if __name__ == '__main__':
                     "stock_quantity": 15,
                     "description": "Một câu chuyện thần thoại đầy hấp dẫn của J.R.R. Tolkien về cuộc chiến chống lại thế lực hắc ám Sauron.",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/qctxm4xjuiuy5axe767q.jpg',
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 },
@@ -273,6 +290,7 @@ if __name__ == '__main__':
                     "stock_quantity": 50,
                     "description": "Tác phẩm kinh điển của F. Scott Fitzgerald mô tả cuộc sống giàu có và đau khổ ở thập kỷ 1920.",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/lik7dt77bsptgg5eakgq.jpg',
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 },
@@ -282,6 +300,7 @@ if __name__ == '__main__':
                     "stock_quantity": 40,
                     "description": "Cuốn sách đoạt giải Pulitzer của Harper Lee về cuộc đấu tranh chống phân biệt chủng tộc.",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/lik7dt77bsptgg5eakgq.jpg',
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 },
@@ -291,6 +310,7 @@ if __name__ == '__main__':
                     "stock_quantity": 30,
                     "description": "George Orwell vẽ ra một thế giới dystopian đầy ám ảnh.",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/g0b1ypwqdp3ron415wcv.jpg',
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 },
@@ -300,6 +320,7 @@ if __name__ == '__main__':
                     "stock_quantity": 25,
                     "description": "Tác phẩm lãng mạn nổi tiếng của Jane Austen kể về tình yêu và sự hiểu lầm.",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/g0b1ypwqdp3ron415wcv.jpg',
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 },
@@ -309,6 +330,7 @@ if __name__ == '__main__':
                     "stock_quantity": 10,
                     "description": "Hành trình đầy bi kịch và phiêu lưu của thuyền trưởng Ahab do Herman Melville kể.",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/lik7dt77bsptgg5eakgq.jpg',
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 },
@@ -318,6 +340,7 @@ if __name__ == '__main__':
                     "stock_quantity": 20,
                     "description": "Cuốn tiểu thuyết của J.D. Salinger về sự nổi loạn tuổi trẻ.",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/g0b1ypwqdp3ron415wcv.jpg',
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 },
@@ -327,6 +350,7 @@ if __name__ == '__main__':
                     "stock_quantity": 12,
                     "description": "Một tác phẩm vĩ đại của Leo Tolstoy về cuộc chiến và tình yêu ở nước Nga.",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/qctxm4xjuiuy5axe767q.jpg',
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 },
@@ -336,6 +360,7 @@ if __name__ == '__main__':
                     "stock_quantity": 18,
                     "description": "Dostoevsky viết về tội ác và sự cứu chuộc đầy triết lý và sâu sắc.",
                     "image": 'https://res.cloudinary.com/drzc4fmxb/image/upload/v1734077860/g0b1ypwqdp3ron415wcv.jpg',
+                    "online_content_url": "http://res.cloudinary.com/drzc4fmxb/raw/upload/v1752389499/soznqxuwzjxlhr5gtoco.pdf",
                     "category_id": 1,
                     "author_id": 1
                 }
@@ -349,3 +374,5 @@ if __name__ == '__main__':
             print("success to create database")
     except Exception as e:
         print("Fail to create database, err:{}".format(e))
+
+

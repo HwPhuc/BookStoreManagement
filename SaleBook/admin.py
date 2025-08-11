@@ -44,54 +44,53 @@ class LogoutView(AuthenticatedView):
         return redirect('/admin')
 
 
-# from datetime import datetime
-#
-#
-# class StatsOnlineView(AuthenticatedView):
-#     @expose('/')
-#     def index(self):
-#         kw = request.args.get('kw')
-#         date = request.args.get('date')
-#
-#         # Nếu date không rỗng, tách tháng và năm
-#         if date:
-#             year, month = map(int, date.split('-'))
-#         else:
-#             # Nếu không có input, lấy năm tháng hiện tại
-#             year = int(request.args.get('year', datetime.now().year))
-#             month = int(request.args.get('month', datetime.now().month))
-#
-#         report, total_revenue = dao.get_stats_online(year, month, kw)
-#         print(report)
-#
-#         return self.render('admin/stats_online.html', stats=report, total_revenue=total_revenue)
-#
-#
-# class StatsOfflineView(AuthenticatedView):
-#     @expose('/')
-#     def index(self):
-#         kw = request.args.get('kw')
-#         date = request.args.get('date')
-#
-#         # Nếu date không rỗng, tách tháng và năm
-#         if date:
-#             year, month = map(int, date.split('-'))
-#         else:
-#             # Nếu không có input, lấy năm tháng hiện tại
-#             year = int(request.args.get('year', datetime.now().year))
-#             month = int(request.args.get('month', datetime.now().month))
-#
-#         report, total_revenue = dao.get_stats_store(year, month, kw)
-#         print(report)
-#
-#         return self.render('admin/stats_store.html', stats=report, total_revenue=total_revenue)
-#
-#
+from datetime import datetime
+
+
+class StatsOnlineView(AuthenticatedView):
+    @expose('/')
+    def index(self):
+        kw = request.args.get('kw')
+        date = request.args.get('date')
+
+        # Nếu date không rỗng, tách tháng và năm
+        if date:
+            year, month = map(int, date.split('-'))
+        else:
+            # Nếu không có input, lấy năm tháng hiện tại
+            year = int(request.args.get('year', datetime.now().year))
+            month = int(request.args.get('month', datetime.now().month))
+
+        report, total_revenue = dao.get_stats_online(year, month, kw)
+        print(report)
+
+        return self.render('admin/stats_online.html', stats=report, total_revenue=total_revenue)
+
+
+class StatsOfflineView(AuthenticatedView):
+    @expose('/')
+    def index(self):
+        kw = request.args.get('kw')
+        date = request.args.get('date')
+
+        # Nếu date không rỗng, tách tháng và năm
+        if date:
+            year, month = map(int, date.split('-'))
+        else:
+            # Nếu không có input, lấy năm tháng hiện tại
+            year = int(request.args.get('year', datetime.now().year))
+            month = int(request.args.get('month', datetime.now().month))
+
+        report, total_revenue = dao.get_stats_store(year, month, kw)
+        print(report)
+
+        return self.render('admin/stats_store.html', stats=report, total_revenue=total_revenue)
+
+
 admin.add_view(AdminView(User, db.session))
 admin.add_view(BookView(Book, db.session))
 admin.add_view(CategoryView(Category, db.session))
 admin.add_view(MyModelView(Regulation, db.session))
-#
 # admin.add_view(StatsOnlineView(name='Doanh số bán online'))
-# admin.add_view(StatsOfflineView(name='Doanh số tại cửa hàng'))
+admin.add_view(StatsOfflineView(name='Doanh số tại cửa hàng'))
 admin.add_view(LogoutView(name='Đăng xuất'))

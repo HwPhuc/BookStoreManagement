@@ -6,6 +6,13 @@
       rel="stylesheet">
 
 
+{% if book %}
+{% block title %}
+Nhà sách - {{book.name}}
+{% endblock %}
+{% endif %}
+
+
 {% block content %}
 <div class="container my-4" style="flex: 1;">
     <div class="row">
@@ -58,6 +65,9 @@
                         class="bi bi-cart"></i> Thêm vào giỏ
                     hàng
                 </button>
+                <a href="{{ url_for('read_online', book_id=book.id) }}" class="btn ms-4 text-truncate" style="border: 1px solid;" onclick="isAuthUser()">
+                    <i class="bi bi-book"></i> Đọc sách online
+                </a>
             </div>
         </div>
     </div>
@@ -160,8 +170,8 @@
     // Lắng nghe sự kiện click vào nút "Xác nhận mua hàng"
     document.getElementById("paymentInBook").addEventListener("click", function() {
 
-        var quantity = document.getElementById("quantity").value;
-        var paymentMethod = document.getElementById("paymentMethod").value;
+        let quantity = document.getElementById("quantity").value;
+        let paymentMethod = document.getElementById("paymentMethod").value;
 
         if (quantity < 1) {
             alert("Vui lòng chọn số lượng tối thiểu là 1");
@@ -185,7 +195,7 @@
 
     // Lắng nghe sự kiện click vào nút "Thêm vào giỏ hàng"
     document.getElementById("addToCart").addEventListener("click", function() {
-        var quantity = document.getElementById("q").value;
+        let quantity = document.getElementById("q").value;
 
         if (quantity < 1) {
             alert("Vui lòng chọn số lượng tối thiểu là 1");
@@ -193,7 +203,7 @@
         } else {
             addToCart({{book.id}}, {{current_user.id}}, quantity);
             alert("Đã thêm vào giỏ hàng");
-            var addToCardModal = bootstrap.Modal.getInstance(document.getElementById('addToCardModal'));
+            let addToCardModal = bootstrap.Modal.getInstance(document.getElementById('addToCardModal'));
             addToCardModal.hide();
         }
     });
@@ -202,8 +212,8 @@
     // Lắng nghe input quantity tính tổng tiền
     document.getElementById("quantity").addEventListener("input", function() {
 
-        var quantity = document.getElementById("quantity").value;
-        var totalPrice = quantity * {{ book.price }};
+        let quantity = document.getElementById("quantity").value;
+        let totalPrice = quantity * {{ book.price }};
 
         document.getElementById("totalPrice").value = totalPrice.toLocaleString() + " VNĐ"; // Định dạng tiền tệ
     })
@@ -211,8 +221,8 @@
     // Lắng nghe input quantity tính tổng tiền
     document.getElementById("q").addEventListener("input", function() {
 
-        var q = document.getElementById("q").value;
-        var totalPrice = q * {{ book.price }};
+        let q = document.getElementById("q").value;
+        let totalPrice = q * {{ book.price }};
 
         document.getElementById("total").value = totalPrice.toLocaleString() + " VNĐ"; // Định dạng tiền tệ
     })
@@ -236,9 +246,3 @@
     }
 </style>
 {% endblock %}
-
-
-
-
-
-

@@ -1,0 +1,235 @@
+{% extends 'layout/base.html' %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Borel&family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Markazi+Text&family=Montserrat:wght@100..900&family=Pacifico&display=swap"
+      rel="stylesheet">
+
+{% block content %}
+<div class="container my-4" style="flex: 1;">
+    <h2 class="markazi-text-main pt-4" style="font-size: 3rem">Đọc sách online: {{ book.name }}</h2>
+    {% if not is_purchased %}
+        {% if has_tried %}
+            <div id="trial-message" class="alert alert-danger montserrat">
+                Bạn đã sử dụng hết lượt đọc thử miễn phí cho sách này.
+                <a href="{{ url_for('product_detail', book_name=book.name, book_id=book.id) }}">Mua sách để đọc tiếp!</a>
+            </div>
+        {% elif trial_duration %}
+            <div id="trial-message" class="alert alert-info montserrat">
+                Bạn đang đọc thử miễn phí. Thời gian còn lại: <span id="trial-timer">{{ trial_duration }}</span>.
+                <a href="{{ url_for('product_detail', book_name=book.name, book_id=book.id) }}">Mua sách để đọc tiếp!</a>
+            </div>
+        {% endif %}
+    {% endif %}
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Nội dung sách</h5>
+                    {% if book.online_content_url and (is_purchased or not has_tried) %}
+                        <div class="mb-3">
+                            <button id="prev-page-top" class="btn btn-secondary">Trang trước</button>
+                            <button id="next-page-top" class="btn btn-secondary">Trang sau</button>
+                            <span id="page-num-top"></span> / <span id="page-count-top"></span>
+                        </div>
+                        <canvas id="pdf-canvas"></canvas>
+                        <div class="mt-3">
+                            <button id="prev-page" class="btn btn-secondary">Trang trước</button>
+                            <button id="next-page" class="btn btn-secondary">Trang sau</button>
+                            <span id="page-num"></span> / <span id="page-count"></span>
+                        </div>
+                    {% else %}
+                        <p class="card-text montserrat" style="color: #646568;">
+                            Hiện tại không có nội dung online cho sách này hoặc bạn cần mua sách để đọc tiếp.
+                        </p>
+                    {% endif %}
+                    <a href="{{ url_for('product_detail', book_name=book.name, book_id=book.id) }}" class="btn btn-primary mt-3">
+                        <i class="bi bi-arrow-left"></i> Quay lại chi tiết sách
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <img src="{{ book.image }}" class="img-fluid rounded" alt="{{ book.name }}">
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js_internal %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+<script>
+    // Cấu hình worker cho PDF.js
+    if (typeof pdfjsLib !== 'undefined') {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        {% if book.online_content_url and (is_purchased or not has_tried) %}
+            var url = "{{ book.online_content_url | safe }}".replace('http://', 'https://');
+            var pdfDoc = null,
+                pageNum = 1,
+                pageRendering = false,
+                pageNumPending = null,
+                scale = 1.5,
+                canvas = document.getElementById('pdf-canvas'),
+                ctx = canvas.getContext('2d');
+            var isPurchased = {{ is_purchased | tojson }};
+            var trialDuration = {{ trial_duration | tojson }};
+
+            function renderPage(num, scrollToTop) {
+                pageRendering = true;
+                pdfDoc.getPage(num).then(function(page) {
+                    var viewport = page.getViewport({ scale: scale });
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    var renderContext = {
+                        canvasContext: ctx,
+                        viewport: viewport
+                    };
+                    var renderTask = page.render(renderContext);
+                    renderTask.promise.then(function() {
+                        pageRendering = false;
+                        if (pageNumPending !== null) {
+                            renderPage(pageNumPending, scrollToTop);
+                            pageNumPending = null;
+                        }
+                        if (scrollToTop) {
+                            window.scrollTo(0, 0);
+                        }
+                    });
+                    document.getElementById('page-num').textContent = num;
+                    document.getElementById('page-num-top').textContent = num;
+                }).catch(function(error) {
+                    console.error('Lỗi khi render trang PDF:', error);
+                    document.getElementById('pdf-canvas').style.display = 'none';
+                    document.querySelector('.card-body').innerHTML += '<p class="text-danger">Không thể render trang PDF: ' + error.message + '</p>';
+                });
+            }
+
+            function queueRenderPage(num, scrollToTop) {
+                if (pageRendering) {
+                    pageNumPending = num;
+                } else {
+                    renderPage(num, scrollToTop);
+                }
+            }
+
+            // Sự kiện cho nút dưới (có cuộn lên đầu)
+            document.getElementById('prev-page').addEventListener('click', function() {
+                if (pageNum <= 1) return;
+                pageNum--;
+                queueRenderPage(pageNum, true);
+            });
+
+            document.getElementById('next-page').addEventListener('click', function() {
+                if (pageNum >= pdfDoc.numPages) return;
+                pageNum++;
+                queueRenderPage(pageNum, true);
+            });
+
+            // Sự kiện cho nút trên (không cuộn)
+            document.getElementById('prev-page-top').addEventListener('click', function() {
+                if (pageNum <= 1) return;
+                pageNum--;
+                queueRenderPage(pageNum, false);
+            });
+
+            document.getElementById('next-page-top').addEventListener('click', function() {
+                if (pageNum >= pdfDoc.numPages) return;
+                pageNum++;
+                queueRenderPage(pageNum, false);
+            });
+
+            // Bộ đếm ngược cho đọc thử
+            if (!isPurchased && trialDuration) {
+                var timeLeft = trialDuration;
+                var timerElement = document.getElementById('trial-timer');
+                var trialMessage = document.getElementById('trial-message');
+
+                function formatTime(seconds) {
+                    var days = Math.floor(seconds / (24 * 3600));
+                    seconds %= (24 * 3600);
+                    var hours = Math.floor(seconds / 3600);
+                    seconds %= 3600;
+                    var minutes = Math.floor(seconds / 60);
+                    seconds %= 60;
+                    return `${days} ngày ${hours} giờ ${minutes} phút ${seconds} giây`;
+                }
+
+                timerElement.textContent = formatTime(timeLeft);
+
+                var countdown = setInterval(function() {
+                    timeLeft--;
+                    timerElement.textContent = formatTime(timeLeft);
+
+                    if (timeLeft <= 0) {
+                        clearInterval(countdown);
+                        trialMessage.className = 'alert alert-danger montserrat';
+                        trialMessage.innerHTML = 'Hết thời gian đọc thử! Vui lòng mua sách để đọc tiếp. <a href="{{ url_for('product_detail', book_name=book.name, book_id=book.id) }}">Mua ngay</a>';
+                        setTimeout(function() {
+                            window.location.href = '{{ url_for('product_detail', book_name=book.name, book_id=book.id) }}';
+                        }, 3000);
+                    }
+                }, 1000);
+            }
+
+            if (typeof pdfjsLib !== 'undefined') {
+                pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
+                    pdfDoc = pdfDoc_;
+                    document.getElementById('page-count').textContent = pdfDoc.numPages;
+                    document.getElementById('page-count-top').textContent = pdfDoc.numPages;
+                    renderPage(pageNum, true);
+                }).catch(function(error) {
+                    console.error('Lỗi khi tải PDF:', error);
+                    document.getElementById('pdf-canvas').style.display = 'none';
+                    document.querySelector('.card-body').innerHTML += '<p class="text-danger">Không thể tải PDF: ' + error.message + '. Vui lòng kiểm tra URL hoặc quyền truy cập file.</p>';
+                });
+            } else {
+                console.error('PDF.js không được tải.');
+                document.getElementById('pdf-canvas').style.display = 'none';
+                document.querySelector('.card-body').innerHTML += '<p class="text-danger">Không thể tải thư viện PDF.js. Vui lòng kiểm tra kết nối mạng.</p>';
+            }
+        {% endif %}
+    });
+</script>
+{% endblock %}
+
+{% block css_internal %}
+<style>
+    .montserrat {
+        font-family: "Montserrat", sans-serif;
+        font-optical-sizing: auto;
+        font-weight: 300;
+        font-style: normal;
+    }
+    .card {
+        border: 1px solid #d7d0bf;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .card-title {
+        font-family: "Markazi Text", serif;
+        font-size: 1.8rem;
+        color: #887d55;
+    }
+    .btn-primary {
+        background-color: #887d55;
+        border-color: #887d55;
+    }
+    .btn-primary:hover {
+        background-color: #6b5e3b;
+        border-color: #6b5e3b;
+    }
+    #pdf-canvas {
+        border: 1px solid #ccc;
+        width: 100%;
+    }
+    .alert {
+        font-size: 1rem;
+        padding: 10px;
+        border-radius: 5px;
+    }
+</style>
+{% endblock %}
