@@ -15,12 +15,29 @@ Thông tin tài khoản
             </div>
             <div class="col-md-8">
                 <div class="card-body">
-                    <h5 class="card-title">{{current_user.name}}</h5>
-                    <p class="card-text">Email: {% if current_user.email %}{{current_user.email}} {% endif %}</p>
-                    <p class="card-text">Ngày sinh: </p>
-                    <p class="card-text">Giới tính: </p>
-                    <p class="card-text">Số điện thoại: </p>
-                    <p class="card-text"><small class="text-muted">Ngày tham gia: </small></p>
+                    <div class="row">
+                        <h5 class="card-title col-lg-10 col-md-12 text-center">Thông tin cá nhân</h5>
+                    </div>
+                    <p class="card-text">Họ tên: {{current_user.name}}</p>
+                    <p class="card-text">Số dư: <span style="font-weight: 500">{{ "{:,.0f}".format(current_user.balance) }} đ </span>
+                    </p>
+                    <!--                    <div class="row">-->
+                    <!--                        <p class="card-text col-lg-6">Ngày sinh: </p>-->
+                    <!--                        <p class="card-text col-lg-6" style="margin-bottom: 1rem;">Giới tính: </p>-->
+                    <!--                    </div>-->
+                    <div class="row">
+                        <p class="card-text col-lg-6">Email: {% if current_user.email %}{{current_user.email}} {% endif
+                            %}</p>
+                        <p class="card-text col-lg-6" style="margin-bottom: 1rem;">Số điện thoại: </p>
+                    </div>
+                    <p class="card-text"><small class="text-muted">Ngày tham gia: {% if current_user.created_at
+                        %}{{current_user.created_at.strftime("%H:%M-%d/%m/%Y") }} {% endif %}</small></p>
+                    <div class="text-end">
+                        <a class="btn btn-sm btn-dark pr-2 pl-2" data-bs-toggle="modal"
+                           data-bs-target="#editPasswordModal">Đổi mật khẩu</a>
+                        <a class="btn btn-sm btn-outline-dark pr-2 pl-2" data-bs-toggle="modal"
+                           data-bs-target="#editInfoModal">Sửa thông tin</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -57,9 +74,11 @@ Thông tin tài khoản
                             <p><strong>Trạng thái:</strong>
                                 {% if order.status.name == 'SUCCESS' %} <span
                                         style="color: #32CD32">Đã thanh toán</span> {% endif %}
-                                {% if order.status.name == 'PENDING' and not order.is_paid %} <span style="color: #FF0000">Chờ thanh toán tại cửa hàng - Tự hủy lúc {{ order.time_to_cancel.strftime("%H:%M:%S %d/%m/%Y") }} </span>
+                                {% if order.status.name == 'PENDING' and not order.is_paid %} <span
+                                        style="color: #FF0000">Chờ thanh toán tại cửa hàng - Tự hủy lúc {{ order.time_to_cancel.strftime("%H:%M:%S %d/%m/%Y") }} </span>
                                 {% endif %}
-                                {% if order.status.name == 'PENDING' and order.is_paid %} <span style="color: #32CD32">Đã thanh toán</span>{% endif %}
+                                {% if order.status.name == 'PENDING' and order.is_paid %} <span style="color: #32CD32">Đã thanh toán</span>{%
+                                endif %}
                                 {% if order.status.name == 'CANCEL' %} <span style="color: #FF0000">Đã hủy</span> {%
                                 endif %}
                             </p>
@@ -70,7 +89,8 @@ Thông tin tài khoản
                             </p>
                             <p><strong>Nhận hàng:</strong>
                                 {% if order.is_shipped %} <span>Đã nhận hàng</span> {% endif %}
-                                {% if not order.is_shipped %} <span style="color: #FF0000">Chưa nhận hàng</span> {% endif %}
+                                {% if not order.is_shipped %} <span style="color: #FF0000">Chưa nhận hàng</span> {%
+                                endif %}
                             </p>
 
                             <!-- Chi tiết đơn hàng -->
@@ -131,4 +151,133 @@ Thông tin tài khoản
         </div>
     </div>
 </div>
+
+{% if current_user.is_authenticated %}
+<div class="modal fade" id="editInfoModal" tabindex="-1" aria-labelledby="editInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header" style="background-color: #d7d0bf">
+                <h5 class="modal-title" id="editInfoModalLabel">Chỉnh sửa thông tin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+
+            <div class="modal-body bg-main">
+                <form id="editInfoForm">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Họ tên</label>
+                        <input type="text" class="form-control bg-sp" id="name" name="name"
+                               value="{{ current_user.name }}"/>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control bg-sp" id="email" name="email"
+                               value="{% if current_user.email %} {{ current_user.email }} {% endif %}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Số điện thoại</label>
+                        <input type="text" class="form-control bg-sp" id="phone" name="phone"
+                               value="{% if current_user.phone_number %} {{ current_user.phone_number }} {% endif %}">
+                    </div>
+
+                    <div class="d-flex justify-content-center mt-5 mb-3">
+                        <button class="btn" style="border: 1px solid; background-color: #d7d0bf" type="submit">Xác
+                            nhận
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editPasswordModal" tabindex="-1" aria-labelledby="editPasswordModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header" style="background-color: #d7d0bf">
+                <h5 class="modal-title" id="editPasswordModalLabel">Đổi mật khẩu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+
+            <div class="modal-body bg-main">
+                <div class="mb-3">
+                    <label for="oldPassword" class="form-label">Nhập mật khẩu</label>
+                    <input type="password" class="form-control bg-sp" id="oldPassword" name="old_password" required/>
+                </div>
+
+                <div class="mb-3">
+                    <label for="newPassword" class="form-label">Mật khẩu mới</label>
+                    <input type="password" class="form-control bg-sp" id="newPassword" name="new_password" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="confirmPassword" class="form-label">Xác nhận mật khẩu mới</label>
+                    <input type="password" class="form-control bg-sp" id="confirmPassword" name="confirm_password"
+                           required>
+                </div>
+
+                <div class="d-flex justify-content-center mt-5 mb-3">
+                    <button class="btn" style="border: 1px solid; background-color: #d7d0bf" id="submitChangPassword"
+                            onclick="changePassword()">
+                        Xác nhận
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% block js_internal %}
+<script>
+    function changePassword() {
+        let oldPassword = document.getElementById("oldPassword").value.trim();
+        let newPassword = document.getElementById("newPassword").value.trim();
+        let confirmPassword = document.getElementById("confirmPassword").value.trim();
+
+        if (!oldPassword || !newPassword || !confirmPassword) {
+            alert("Vui lòng nhập đầy đủ thông tin.");
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            alert("Mật khẩu mới và xác nhận mật khẩu không khớp.");
+            return;
+        }
+
+        fetch("/api/change_password", {
+            method: 'POST',
+            body: JSON.stringify({
+                "old_password": oldPassword,
+                "new_password": newPassword,
+            }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(res => {
+            if (res.status === 400) {
+                alert("Mật khẩu cũ không đúng");
+                return
+            }
+
+            if (res.status === 200) {
+                alert('Đổi mật khẩu thành công');
+                window.location.reload();
+            } else {
+                return res.json().then(data => {
+                    alert(data.message || "Lỗi không xác định.");
+                });
+            }
+        }).catch(err => {
+            alert('Đã sảy ra lỗi không xác định!');
+            console.error('error: ', err)
+        });
+    }
+</script>
+{% endblock %}
+
 {% endblock %}

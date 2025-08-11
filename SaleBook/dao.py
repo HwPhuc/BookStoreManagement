@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from SaleBook import app, db
 import hashlib
 from SaleBook.models import User, UserRole, Book, Category, Cart, Author, Order, OrderDetail, Import, \
-    ImportDetail, Regulation, OrderType, OrderStatus, TrialHistory
+    ImportDetail, Regulation, OrderType, OrderStatus, WalletLog, TransactionType, TrialHistory
 import cloudinary.uploader
 from flask import request
 
@@ -14,7 +14,7 @@ from flask import request
 # count__ đếm số lượng
 # check__ kiểm tra tồn tại
 # access_check__ kiểm tra quyền truy cập
-
+page_size = app.config["PAGE_SIZE"]
 
 # Cấu hình Cloudinary
 cloudinary.config(
@@ -55,19 +55,27 @@ def get_all_book():
     return Book.query.all()
 
 
-def add_new_book(name, price, quantity, description, barcode, category_id, author_id, image_url=None, pdf_url=None, trial_duration=300):
-    b = Book(
-        name=name,
-        price=price,
-        stock_quantity=quantity,
-        description=description,
-        barcode=barcode,
-        category_id=category_id,
-        author_id=author_id,
-        image=image_url,
-        online_content_url=pdf_url,
-        trial_duration=trial_duration
-    )
+def add_new_book(name, price, quantity, description, barcode, category_id, author_id, image_url =None, pdf_url=None, trial_duration=300):
+    b = Book(name=name, price=price, stock_quantity=quantity, description=description, barcode=barcode,
+             category_id=category_id, author_id=author_id, online_content_url=pdf_url, trial_duration=trial_duration)
+    # if image:
+    #     res = cloudinary.uploader.upload(image)
+    #     b.image = res.get('secure_url')
+
+# def add_new_book(name, price, quantity, description, barcode, category_id, author_id, image_url=None, pdf_url=None, trial_duration=300):
+#     b = Book(
+#         name=name,
+#         price=price,
+#         stock_quantity=quantity,
+#         description=description,
+#         barcode=barcode,
+#         category_id=category_id,
+#         author_id=author_id,
+#         image=image_url,
+#         online_content_url=pdf_url,
+#         trial_duration=trial_duration
+#     )
+
     db.session.add(b)
     db.session.commit()
     return b
@@ -138,6 +146,30 @@ def auth_user(username, password, role=None):
         u = u.filter(User.user_role.__eq__(role))
 
     return u.first()
+
+
+def check_password(username, password):
+    password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
+    u = User.query.filter(User.username.__eq__(username.strip()), User.password.__eq__(password)).first()
+
+    if u:
+        return True
+    else:
+        return False
+
+
+def set_new_password(username, old_password, new_password):
+    old_password = str(hashlib.md5(old_password.strip().encode('utf-8')).hexdigest())
+    u = User.query.filter(User.username.__eq__(username.strip()), User.password.__eq__(old_password)).first()
+
+    if not u:
+        return False  # Đổi mật khẩu thất bại do sai mật khẩu cũ
+
+    new_password = str(hashlib.md5(new_password.strip().encode('utf-8')).hexdigest())
+    u.password = new_password
+
+    db.session.commit()
+    return True
 
 
 def add_customer(name, username, password, avatar=None):
@@ -272,7 +304,6 @@ def add_order_detail(order_id, book_id, quantity, unit_price):
 
 def get_all_order_with_page_size(customer_id, page=1):
     """Get all orders on a paginated page."""
-    page_size = app.config["PAGE_SIZE"]
     start = (page - 1) * page_size
 
     o = Order.query.filter(Order.customer_id == customer_id)
@@ -334,15 +365,19 @@ def get_all_order_of_employee(employee_id):
 
 def auto_cancel_order():
     """Automatically cancel an order if the customer doesn't come to pick it up."""
-    expired_orders = Order.query.filter(Order.status == OrderStatus.PENDING).all()
+    expired_orders = Order.query.filter(Order.status == OrderStatus.PENDING, Order.is_paid == False).all()
+
+    if not expired_orders:
+        return
+
     if expired_orders:  # Nếu có được list đơn hàng pending
         for order in expired_orders:  # với một đơn hàng trong list đơn hàng pending
             if order.time_to_cancel <= datetime.now():  # nếu đã vượt quá thời gian chờ thì hủy đơn
                 order.status = OrderStatus.CANCEL
                 for detail in order.order_detail:  # với mỗi chi tiết đơn hàng trong một đơn hàng
                     add_exist_book(book_id=detail.book_id, quantity=detail.quantity)
-    db.session.commit()
-    return
+        db.session.commit()
+        return
 
 
 def add_import_book(importer_id):
@@ -381,6 +416,30 @@ def get_cancel_time():
     """Get the rule of system"""
     regulation = Regulation.query.get(3)
     return regulation.value
+
+
+def top_up(user_id, amount):
+    user = User.query.get(user_id)
+    user.balance += amount
+    db.session.commit()
+    return
+
+
+def add_top_up_log(amount, user_id, balance_after):
+    wallet_log = WalletLog(transaction_type=TransactionType.TOP_UP, amount=amount, balance_after=balance_after, user_id=user_id)
+    db.session.add(wallet_log)
+    db.session.commit()
+    return
+
+
+def get_all_wallet_log_of_user(user_id, page):
+    start = (page - 1) * page_size
+
+    wallet_logs = WalletLog.query.filter(WalletLog.user_id.__eq__(user_id))
+    wallet_logs = wallet_logs.order_by(WalletLog.created_at.desc())
+    wallet_logs = wallet_logs.slice(start, start + page_size)
+
+    return wallet_logs.all()
 
 
 #New
