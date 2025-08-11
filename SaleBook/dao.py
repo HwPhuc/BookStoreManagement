@@ -55,26 +55,26 @@ def get_all_book():
     return Book.query.all()
 
 
-def add_new_book(name, price, quantity, description, barcode, category_id, author_id, image_url =None, pdf_url=None, trial_duration=300):
-    b = Book(name=name, price=price, stock_quantity=quantity, description=description, barcode=barcode,
-             category_id=category_id, author_id=author_id, online_content_url=pdf_url, trial_duration=trial_duration)
+# def add_new_book(name, price, quantity, description, barcode, category_id, author_id, image_url =None, pdf_url=None, trial_duration=300):
+#     b = Book(name=name, price=price, stock_quantity=quantity, description=description, barcode=barcode,
+#              category_id=category_id, author_id=author_id, online_content_url=pdf_url, trial_duration=trial_duration)
     # if image:
     #     res = cloudinary.uploader.upload(image)
     #     b.image = res.get('secure_url')
 
-# def add_new_book(name, price, quantity, description, barcode, category_id, author_id, image_url=None, pdf_url=None, trial_duration=300):
-#     b = Book(
-#         name=name,
-#         price=price,
-#         stock_quantity=quantity,
-#         description=description,
-#         barcode=barcode,
-#         category_id=category_id,
-#         author_id=author_id,
-#         image=image_url,
-#         online_content_url=pdf_url,
-#         trial_duration=trial_duration
-#     )
+def add_new_book(name, price, quantity, description, barcode, category_id, author_id, image_url=None, pdf_url=None, trial_duration=300):
+    b = Book(
+        name=name,
+        price=price,
+        stock_quantity=quantity,
+        description=description,
+        barcode=barcode,
+        category_id=category_id,
+        author_id=author_id,
+        image=image_url,
+        online_content_url=pdf_url,
+        trial_duration=trial_duration
+    )
 
     db.session.add(b)
     db.session.commit()
