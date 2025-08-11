@@ -677,8 +677,6 @@ def add_new_book():
         trial_duration = int(request.form.get('trial_duration') or 0)
         pdf_file = request.files.get('pdf_file')
 
-        trial_duration = int(request.form.get('trial_duration') or 0)
-
         if name in import_details:
             import_details[name]["quantity"] += quantity
         else:

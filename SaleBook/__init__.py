@@ -15,7 +15,8 @@ app = Flask(
     static_folder=os.path.join(root_path, 'static')         # nơi chứa static (css, js, ảnh)
 )
 app.secret_key = "Us8k2s2@#*$jjudj^8&**tgfsgYFS677*&6s8suuuu"
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/bookstorev2?charset=utf8mb4" % quote('Admin@123')
+# app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/bookstorev2?charset=utf8mb4" % quote('Admin@123')
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://if0_39682645:%s@sql307.infinityfree.com/if0_39682645_XXX?charset=utf8mb4" % quote('csk4I0qZVTeC')
 app.config["PAGE_SIZE"] = 8
 
 db = SQLAlchemy(app=app)
