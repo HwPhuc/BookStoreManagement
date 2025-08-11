@@ -23,7 +23,7 @@ cloudinary.config(
 
 login_manager.login_view = "/login"
 
-#Done
+
 @app.route("/")
 def home():
     kw = request.args.get('search_query')
@@ -36,13 +36,11 @@ def home():
     return render_template('index.html', books=books, pages=math.ceil(total / page_size), page=int(page))
 
 
-#Done
 @app.route('/errauth')
 def err_auth():
     return render_template('err_auth.html')
 
 
-#Done
 @app.route('/register', methods=['get', 'post'])
 def register_process():
     err_msg = ''
@@ -74,7 +72,6 @@ def get_user_by_id(user_id):
     return dao.get_user_by_id(user_id)
 
 
-#Done
 @app.route("/login", methods=['get', 'post'])
 def login_process():
     err_msg = ''
@@ -90,7 +87,6 @@ def login_process():
     return render_template('user_process/login.html', err_msg=err_msg)
 
 
-#Done
 @app.route("/login-admin", methods=['post'])
 def login_admin_process():
     username = request.form.get('username')
@@ -102,7 +98,6 @@ def login_admin_process():
     return redirect('/admin')
 
 
-#Done
 @app.route('/profile')
 @login_required
 def view_profile():
@@ -115,7 +110,28 @@ def view_profile():
     return render_template('user_process/profile.html', orders=orders, pages=math.ceil(total / page_size), page=page)
 
 
-#Done
+@app.route('/api/change_password', methods=['post'])
+@login_required
+def change_password():
+    old_password = request.json.get('old_password')
+    new_password = request.json.get('new_password')
+    username = current_user.username
+
+    result = dao.set_new_password(username=username, old_password=old_password, new_password=new_password)
+    if result:
+        return jsonify({"result": "đổi mật khẩu thành công"}), 200
+    else:
+        return jsonify({"result": "đổi mật khẩu thất bại"}), 400
+
+
+@app.route('/wallet_log')
+@login_required
+def wallet_log():
+    page = int(request.args.get('page', 1))
+    wallet_logs = dao.get_all_wallet_log_of_user(user_id=current_user.id, page=int(page))
+    return render_template('user_process/wallet_log.html', wallet_logs=wallet_logs, page=page)
+
+
 @app.route('/logout')
 def logout_process():
     session.clear()
@@ -123,7 +139,6 @@ def logout_process():
     return redirect('/')
 
 
-#Done
 @app.route('/<book_name>')
 def product_detail(book_name):
     book_id = request.args.get('book_id')
@@ -141,6 +156,7 @@ def product_detail(book_name):
 #     if book:
 #         return render_template('book_detail.html', book=book)
 #     return render_template('err_auth.html', err='Sách không tồn tại!')
+
 
 @app.route('/read_online/<int:book_id>')
 @login_required
@@ -192,6 +208,10 @@ def add_to_cart_api():
     customer_id = request.get_json('customer_id')
     quantity = int(request.get_json('quantity', 1))
 
+    # book_id = request.get_json('book_id')
+    # customer_id = request.get_json('customer_id')
+    # quantity = int(request.get_json('quantity', 1))
+
     if not book_id or not customer_id or quantity < 1:
         return jsonify({"error": "Invalid data"}), 400  # Kiểm tra dữ liệu hợp lệ
 
@@ -202,7 +222,6 @@ def add_to_cart_api():
     return jsonify(utils.stats_cart(cart))
 
 
-#Done
 @app.route('/cart')
 @login_required
 def view_cart_detail():
@@ -210,7 +229,6 @@ def view_cart_detail():
     return render_template('payment/cart.html', cart=cart)
 
 
-#Done
 @app.route('/api/remove_cart', methods=['POST'])
 def remove_cart():
     if not current_user.is_authenticated:
@@ -226,7 +244,6 @@ def remove_cart():
     return jsonify({'message': 'successfully'})
 
 
-#Done
 @app.route('/api/change_cart', methods=['POST'])
 def chang_cart():
     if not current_user.is_authenticated:
@@ -245,7 +262,6 @@ def chang_cart():
     return jsonify(utils.stats_cart(cart))
 
 
-#Done
 @app.context_processor
 def common_response():
     if current_user.is_authenticated:
@@ -272,7 +288,7 @@ def common_response():
         'cart_stats': utils.stats_cart(cart)
     }
 
-#Done
+
 @app.route('/api/checkout_in_store', methods=['POST'])
 def checkout_in_store():
     """
@@ -314,7 +330,6 @@ def checkout_in_store():
         return jsonify({'error': 'Invalid request'}), 404
 
 
-# Done
 @app.route('/api/commit_checkout_offline', methods=['POST'])
 @login_required
 def commit_checkout_offline():
@@ -330,7 +345,6 @@ def commit_checkout_offline():
         return jsonify({'message': 'failed'}), 400
 
 
-# Done
 @app.route('/order_pending')
 @login_required
 def order_pending():
@@ -354,7 +368,6 @@ def order_pending():
         return render_template('err_auth.html', err='Bạn không có quyền truy cập')
 
 
-# Done
 @app.route('/create-checkout-session', methods=['POST'])
 def create_checkout_session():
     """
@@ -452,10 +465,49 @@ def create_checkout_session():
     else:
         return jsonify({'error': 'Invalid request'}), 404
 
+
+@app.route('/create_top_up', methods=['POST'])
+def create_top_up():
+    if not current_user.is_authenticated:
+        return jsonify({"error": "User not authenticated"}), 401  # Nếu người dùng chưa đăng nhập
+
+    if request.method.__eq__('POST'):
+        amount = request.json.get('amount')
+
+        try:
+            checkout_session = stripe.checkout.Session.create(
+                line_items=[{
+                    'price_data': {
+                        'currency': 'vnd',
+                        'product_data': {
+                            'name': "Nạp tiền vào ví",
+                        },
+                        'unit_amount': int(amount),
+                    },
+                    'quantity': 1,
+                }],
+                mode='payment',
+                success_url=url_for('success', _external=True),
+                cancel_url=url_for('cancel', _external=True),
+                metadata={
+                    'user_id': str(current_user.id),
+                    'amount': str(amount),
+                    'balance_after': str(int(current_user.balance + amount)),
+                },
+            )
+            return jsonify({
+                'checkout_url': checkout_session.url,
+            })
+        except Exception as e:
+            return str(e)
+    else:
+        return jsonify({'error': 'Invalid request'}), 400
+
+
 # endpoint_secret = 'whsec_A9U55QVQ321PNAn1kT6HsEFCHiW0fZ2n'
 endpoint_secret = 'whsec_Il5bQb8DmthVhFG2T2HVZ5kIsPeEYLti'
 
-# Done
+
 @app.route('/webhook', methods=['POST'])
 def webhook():
     event = None
@@ -481,22 +533,34 @@ def webhook():
     # Sự kiện phiên thanh tóan thành công
     if event and event['type'] == 'checkout.session.completed':
         # Lấy chuỗi dict đã gửi lên từ trước đó
-        checkout = event['data']['object']['metadata']
-        cart = json.loads(checkout.cart)
+        metadata = event['data']['object']['metadata']
+        if 'cart' in metadata:
+            cart = json.loads(metadata.cart)
 
-        # Tạo order và order detail
-        order = dao.add_order_online(customer_id=checkout.customer_id)
-        for c in cart:
-            dao.add_order_detail(order_id=order.id, book_id=c["book_id"], quantity=int(c["quantity"]),
-                                 unit_price=c["price"])
+            # Tạo order và order detail
+            order = dao.add_order_online(customer_id=metadata.customer_id)
+            for c in cart:
+                dao.add_order_detail(order_id=order.id, book_id=c["book_id"], quantity=int(c["quantity"]),
+                                     unit_price=c["price"])
 
-        # Giảm số lượng hàng tồn kho
-        for c in cart:
-            dao.reduce_book_bought(book_id=c["book_id"], quantity=int(c["quantity"]))
+            # Giảm số lượng hàng tồn kho
+            for c in cart:
+                dao.reduce_book_bought(book_id=c["book_id"], quantity=int(c["quantity"]))
 
-        # Xóa rỗng giỏ hàng
-        if int(checkout["is_cart"]) == 1:
-            dao.remove_all_cart_by_userid(checkout['customer_id'])
+            # Xóa rỗng giỏ hàng
+            if int(metadata["is_cart"]) == 1:
+                dao.remove_all_cart_by_userid(metadata['customer_id'])
+        elif 'user_id' in metadata and 'amount' in metadata:
+            user_id = int(metadata["user_id"])
+            amount = int(metadata["amount"])
+            balance_after = int(metadata["balance_after"])
+
+            user = dao.get_user_by_id(user_id)
+            if user:
+                dao.top_up(user_id, amount)
+                dao.add_top_up_log(amount=amount, user_id=user_id, balance_after=balance_after)
+        else:
+            print("Khong xac dinh")
 
     else:
         # Unexpected event type
@@ -515,7 +579,6 @@ def cancel():
     return render_template('payment/cancel.html')
 
 
-# Done
 @app.route('/import_book', endpoint='import_books')
 @login_required
 def import_book():
@@ -532,7 +595,6 @@ def import_book():
         return render_template('err_auth.html', err='Bạn không có quyền truy cập')
 
 
-# Done
 @app.route('/api/add_new_book', methods=['post'])
 @login_required
 def add_new_book():
@@ -615,12 +677,7 @@ def add_new_book():
         trial_duration = int(request.form.get('trial_duration') or 0)
         pdf_file = request.files.get('pdf_file')
 
-        # for import_id, im in import_detail.items():  # Lặp qua các item trong dictionary
-        #     if barcode == im["barcode"]: # Kiểm tra nếu barcode trùng
-        #         return jsonify({
-        #             "Successfully": 40,
-        #             "session": session.get('import_detail')
-        #         })
+        trial_duration = int(request.form.get('trial_duration') or 0)
 
         if name in import_details:
             import_details[name]["quantity"] += quantity
@@ -646,7 +703,6 @@ def add_new_book():
         return jsonify({'message': 'failed'}), 400
 
 
-# Done
 @app.route('/api/add_exist_book', methods=['post'])
 @login_required
 def add_exist_book():
@@ -716,7 +772,6 @@ def add_exist_book():
         return jsonify({'message': 'failed'}), 400
 
 
-# Done
 @app.route('/api/commit_import_book', methods=['post'])
 @login_required
 def commit_import_book():
@@ -774,7 +829,6 @@ def commit_import_book():
         return jsonify({'message': 'failed'}), 400
 
 
-# Done
 @app.route('/api/clear_all_by_session_name', methods=['post'])
 @login_required
 def clear_all_by_session_name():
@@ -794,7 +848,6 @@ def clear_all_by_session_name():
         return jsonify({'message': 'failed'}), 400
 
 
-# Done
 @app.route('/api/get_session_by_session_name', methods=['post'])
 @login_required
 def get_session_import():
@@ -809,7 +862,6 @@ def get_session_import():
         return jsonify({'message': 'failed'}), 400
 
 
-# Done
 @app.route('/add_author', methods=['get', 'post'])
 @login_required
 def add_author():
@@ -827,7 +879,6 @@ def add_author():
         return render_template('err_auth.html', err='Bạn không có quyền truy cập')
 
 
-# Done
 @app.route('/add_category', methods=['get', 'post'])
 @login_required
 def add_category():
@@ -845,7 +896,6 @@ def add_category():
         return render_template('err_auth.html', err='Bạn không có quyền truy cập')
 
 
-# Done
 @app.route('/import_history')
 @login_required
 def view_import_history():
@@ -856,7 +906,6 @@ def view_import_history():
         return render_template('err_auth.html', err='Bạn không có quyền truy cập')
 
 
-# Done
 @app.route('/sale_book')
 @login_required
 def sale_book():
@@ -885,7 +934,7 @@ def commit_invoice_book():
             if int(order_detail['is_new']) == 0:
                 dao.reduce_book_bought(book_id=order_detail['book_id'], quantity=order_detail['quantity'])
                 dao.add_order_detail_offline(order_id=order.id, book_id=order_detail['book_id'],
-                                            unit_price=order_detail['price'], quantity=order_detail['quantity'])
+                                             unit_price=order_detail['price'], quantity=order_detail['quantity'])
 
         del session['sale_book']
         return jsonify({'message': 'successfully'}), 200
@@ -893,7 +942,6 @@ def commit_invoice_book():
         return jsonify({'message': 'failed'}), 400
 
 
-# Done
 @app.route('/sale_history')
 @login_required
 def sale_history():
@@ -908,6 +956,7 @@ import threading
 import time
 import schedule
 import atexit
+
 
 def run_continuously(interval=1):
     """Continuously run, while executing pending jobs at each

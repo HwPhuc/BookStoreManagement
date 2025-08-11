@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from sqlalchemy import Column, Integer, String, Enum, ForeignKey, DateTime, Boolean, Double, Date
+from sqlalchemy import Column, Integer, String, Enum, ForeignKey, DateTime, Boolean, Double, Date, Text
 from sqlalchemy.orm import relationship
 
 from SaleBook import db, app
@@ -57,6 +57,7 @@ class User(db.Model, UserMixin):
     is_active = Column(Boolean, default=True)
     avatar = Column(String(150),
                     default='https://res.cloudinary.com/drzc4fmxb/image/upload/v1733907010/xvethjfe9cycrroqi7po.jpg')
+    created_at = Column(DateTime, default=datetime.now)
     user_role = Column(Enum(UserRole), default=UserRole.CUSTOMER)
     balance = Column(Double, default=0) # Số tiền trong trong ví
 
@@ -97,6 +98,7 @@ class TrialHistory(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     book_id = db.Column(db.Integer, db.ForeignKey('book.id'), nullable=False)
     trial_date = db.Column(db.DateTime, default=datetime.now)
+
     __table_args__ = (db.UniqueConstraint('user_id', 'book_id', name='unique_user_book_trial'),)
 
 
@@ -116,14 +118,14 @@ class Category(db.Model):
 
     def __str__(self):
         return self.name
-    
+
 
 class Rental(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     created_at = Column(DateTime, default=datetime.now)
     due = Column(Integer, nullable=False) # Thời hạn thuê (hours)
     price = Column(Integer, nullable=False)
-    is_active = Column(Boolean, default=True)
+    is_active = Column(Boolean, default=True) # User còn được đọc không
 
     book_id = Column(Integer, ForeignKey('book.id'), nullable=False)
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
@@ -372,3 +374,5 @@ if __name__ == '__main__':
             print("success to create database")
     except Exception as e:
         print("Fail to create database, err:{}".format(e))
+
+

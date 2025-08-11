@@ -152,6 +152,30 @@ function payment(book_id, quantity, customer_id) {
 }
 
 
+function topUp(amount) {
+    fetch("/create_top_up", {
+        method: 'POST',
+        body: JSON.stringify({
+            "amount": amount,
+        }),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }).then(res => {
+        if(res.status === 401) {
+            window.location.href = '/login'
+        } else {
+            return res.json(); // chuyêển res thành đối tượng js
+        }
+    }).then(result => {
+        window.location.href = result.checkout_url
+    }).catch(err => {
+        alert('Đã sảy ra lỗi không xác định!');
+        console.error('error: ', err)
+    });
+}
+
+
 function checkoutOffline(book_id, quantity, customer_id) {
     fetch("/api/checkout_in_store", {
         method: 'POST',
