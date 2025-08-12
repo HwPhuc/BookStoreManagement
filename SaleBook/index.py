@@ -28,8 +28,9 @@ login_manager.login_view = "/login"
 def home():
     kw = request.args.get('search_query')
     page = request.args.get('page', 1)
+    category_id = request.args.get('category_id')  # Lấy ID danh mục từ query string
 
-    books = dao.load_book(kw=kw, page=int(page))
+    books = dao.load_book(kw=kw, page=int(page), category_id=category_id)
 
     total = dao.count_books()
     page_size = app.config['PAGE_SIZE']
@@ -122,6 +123,23 @@ def change_password():
         return jsonify({"result": "đổi mật khẩu thành công"}), 200
     else:
         return jsonify({"result": "đổi mật khẩu thất bại"}), 400
+
+
+@app.route('/api/update_user_info', methods=['POST'])
+@login_required
+def update_user_info():
+    name = request.json.get('name')
+    email = request.json.get('email')
+    phone = request.json.get('phone')
+
+    if not name or not email:
+        return jsonify({"error": "Họ tên và email không được để trống"}), 400
+
+    result = dao.update_user_info(user_id=current_user.id, name=name, email=email, phone=phone)
+    if result:
+        return jsonify({"message": "Cập nhật thông tin thành công"}), 200
+    else:
+        return jsonify({"error": "Cập nhật thông tin thất bại"}), 500
 
 
 @app.route('/wallet_log')
@@ -264,6 +282,8 @@ def chang_cart():
 
 @app.context_processor
 def common_response():
+    categories = dao.get_all_category()
+
     if current_user.is_authenticated:
         cart = dao.get_all_cart(current_user.id)
     else:
@@ -281,11 +301,13 @@ def common_response():
         if dashboard:
             return {
                 'cart_stats': utils.stats_cart(cart),
-                'dashboard': dashboard
+                'dashboard': dashboard,
+                'categories': categories
             }
 
     return {
-        'cart_stats': utils.stats_cart(cart)
+        'cart_stats': utils.stats_cart(cart),
+        'categories': categories
     }
 
 
@@ -677,8 +699,6 @@ def add_new_book():
         trial_duration = int(request.form.get('trial_duration') or 0)
         pdf_file = request.files.get('pdf_file')
 
-        trial_duration = int(request.form.get('trial_duration') or 0)
-
         if name in import_details:
             import_details[name]["quantity"] += quantity
         else:
@@ -959,16 +979,6 @@ import atexit
 
 
 def run_continuously(interval=1):
-    """Continuously run, while executing pending jobs at each
-    elapsed time interval.
-    @return cease_continuous_run: threading. Event which can
-    be set to cease continuous run. Please note that it is
-    *intended behavior that run_continuously() does not run
-    missed jobs*. For example, if you've registered a job that
-    should run every minute and you set a continuous run
-    interval of one hour then your job won't be run 60 times
-    at each interval but only once.
-    """
     cease_continuous_run = threading.Event()
 
     class ScheduleThread(threading.Thread):

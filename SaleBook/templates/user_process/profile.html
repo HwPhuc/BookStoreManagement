@@ -26,9 +26,8 @@ Thông tin tài khoản
                     <!--                        <p class="card-text col-lg-6" style="margin-bottom: 1rem;">Giới tính: </p>-->
                     <!--                    </div>-->
                     <div class="row">
-                        <p class="card-text col-lg-6">Email: {% if current_user.email %}{{current_user.email}} {% endif
-                            %}</p>
-                        <p class="card-text col-lg-6" style="margin-bottom: 1rem;">Số điện thoại: </p>
+                        <p class="card-text col-lg-6">Email: {% if current_user.email %} {{current_user.email}} {% else %} Chưa cập nhật {% endif%} </p>
+                        <p class="card-text col-lg-6" style="margin-bottom: 1rem;">Số điện thoại: {% if current_user.phone_number %} {{ current_user.phone_number }} {% else %} Chưa cập nhật {% endif %} </p>
                     </div>
                     <p class="card-text"><small class="text-muted">Ngày tham gia: {% if current_user.created_at
                         %}{{current_user.created_at.strftime("%H:%M-%d/%m/%Y") }} {% endif %}</small></p>
@@ -277,7 +276,42 @@ Thông tin tài khoản
             console.error('error: ', err)
         });
     }
+
+    document.getElementById('editInfoForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+
+        if (!name || !email) {
+            alert("Họ tên và email không được để trống.");
+            return;
+        }
+
+        fetch('/api/update_user_info', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name, email, phone })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.message) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.error || "Đã xảy ra lỗi.");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Đã xảy ra lỗi không xác định.");
+        });
+    });
 </script>
 {% endblock %}
+
 
 {% endblock %}
