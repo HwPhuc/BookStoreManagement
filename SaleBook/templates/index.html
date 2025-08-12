@@ -8,13 +8,13 @@ Nhà sách trực tuyến
 
 {% block content %}
 <div>
-    <!--    <div>-->
-    <!--        {% if current_user.is_authenticated%}-->
-    <!--        <h3 class="text-center text-dark fw-bold mt-3 mb-3">Hi {{ current_user.name }} !!</h3>-->
-    <!--        {% else %}-->
-    <!--        <h3 class="text-center text-dark fw-bold mt-3 mb-3">Hi. How are you?</h3>-->
-    <!--        {% endif %}-->
-    <!--    </div>-->
+        <!-- <div>
+            {% if current_user.is_authenticated%}
+            <h3 class="text-center text-dark fw-bold mt-3 mb-3">Hi {{ current_user.name }} !!</h3>
+            {% else %}
+            <h3 class="text-center text-dark fw-bold mt-3 mb-3">Hi. How are you?</h3>
+            {% endif %}
+        </div> -->
 
     <div class="container mt-3 mb-3">
         {% if books %}
@@ -47,23 +47,26 @@ Nhà sách trực tuyến
     </div>
 
     <!--pagination-->
-    <div>
-        {% if pages > 1 %}
-        <ul class="pagination bg-main justify-content-center my-3">
-            <li class="page-item"><a class="page-link bg-main" href="/?page={{page-1}}"
-                                     style="color: #887d55; {% if page == 1 %} pointer-events: none; {% endif %}">Previous</a>
-            </li>
-            {% for i in range(1, pages + 1) %}
-            <li class="page-item"><a class="page-link bg-main" href="/?page={{i}}"
-                                     style="color: #887d55; {% if i == page %} text-decoration: underline; background-color: #bfbaaf; {% endif %}">{{i}}</a>
-            </li>
-            {% endfor %}
-            <li class="page-item"><a class="page-link bg-main" href="/?page={{page+1}}"
-                                     style="color: #887d55; {% if page == pages %} pointer-events: none; {% endif %}">Next</a>
-            </li>
-
-        </ul>
-        {% endif %}
+<div>
+    {% if pages > 1 %}
+    <ul class="pagination bg-main justify-content-center my-3">
+        <li class="page-item">
+            <a class="page-link bg-main" href="/?page={{ page-1 }}{% if request.args.get('category_id') %}&category_id={{ request.args.get('category_id') }}{% endif %}"
+               style="color: #887d55; {% if page == 1 %} pointer-events: none; {% endif %}">Previous</a>
+        </li>
+        {% for i in range(1, pages + 1) %}
+        <li class="page-item">
+            <a class="page-link bg-main" href="/?page={{ i }}{% if request.args.get('category_id') %}&category_id={{ request.args.get('category_id') }}{% endif %}"
+               style="color: #887d55; {% if i == page %} text-decoration: underline; background-color: #bfbaaf; {% endif %}">{{ i }}</a>
+        </li>
+        {% endfor %}
+        <li class="page-item">
+            <a class="page-link bg-main" href="/?page={{ page+1 }}{% if request.args.get('category_id') %}&category_id={{ request.args.get('category_id') }}{% endif %}"
+               style="color: #887d55; {% if page == pages %} pointer-events: none; {% endif %}">Next</a>
+        </li>
+    </ul>
+    {% endif %}
+</div>
     </div>
 </div>
 {% endblock %}

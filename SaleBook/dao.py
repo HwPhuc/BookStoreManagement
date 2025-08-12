@@ -25,8 +25,7 @@ cloudinary.config(
 
 
 # load sản phẩm cho trang chủ
-def load_book(kw=None, page=1):
-    """Get all books on the paginated page. And filter books by query."""
+def load_book(kw=None, page=1, category_id=None):
     query = Book.query
 
     page_size = app.config["PAGE_SIZE"]
@@ -35,8 +34,9 @@ def load_book(kw=None, page=1):
     if kw:
         query = query.filter(Book.name.contains(kw))
 
-    # if cate_id:
-    #     query = query.filter(Product.category_id == cate_id)
+    if category_id:
+        query = query.filter(Book.category_id == category_id)
+
     query = query.slice(start, start + page_size)
 
     return query.all()
@@ -170,6 +170,20 @@ def set_new_password(username, old_password, new_password):
 
     db.session.commit()
     return True
+
+
+def update_user_info(user_id, name, email, phone):
+    try:
+        user = User.query.get(user_id)
+        if user:
+            user.name = name
+            user.email = email
+            user.phone_number = phone
+            db.session.commit()
+            return True
+    except Exception as e:
+        print(f"Error updating user info: {e}")
+    return False
 
 
 def add_customer(name, username, password, avatar=None):
