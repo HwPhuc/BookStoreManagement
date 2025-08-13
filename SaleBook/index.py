@@ -218,17 +218,10 @@ def add_to_cart_api():
     if not current_user.is_authenticated:
         return jsonify({"error": "User not authenticated"}), 401  # Nếu người dùng chưa đăng nhập
 
-    # book_id = request.json.get('book_id')
-    # customer_id = request.json.get('customer_id')
-    # quantity = int(request.json.get('quantity', 1))
-
-    book_id = request.get_json('book_id')
-    customer_id = request.get_json('customer_id')
-    quantity = int(request.get_json('quantity', 1))
-
-    # book_id = request.get_json('book_id')
-    # customer_id = request.get_json('customer_id')
-    # quantity = int(request.get_json('quantity', 1))
+    data = request.get_json()
+    book_id = data.get('book_id')
+    customer_id = data.get('customer_id')
+    quantity = int(data.get('quantity', 1))
 
     if not book_id or not customer_id or quantity < 1:
         return jsonify({"error": "Invalid data"}), 400  # Kiểm tra dữ liệu hợp lệ
