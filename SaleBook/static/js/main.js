@@ -152,6 +152,38 @@ function payment(book_id, quantity, customer_id) {
 }
 
 
+function paymentWithBalance(book_id, quantity, customer_id) {
+    fetch("/api/checkout_by_balance", {
+        method: 'POST',
+        body: JSON.stringify({
+            "book_id": book_id,
+            "quantity": quantity,
+            "customer_id": customer_id,
+        }),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }).then(res => {
+        if(res.status === 201)
+            alert('Đơn hàng của bạn đã được lưu \nVui lòng tới cửa hàng để nhận hàng');
+            window.location.reload();
+
+        if(res.status === 400)
+            alert('Thiếu thông tin sách và giá');
+
+        if(res.status === 402)
+            alert('Tiền trong ví không đủ');
+
+        if(res.status === 401) {
+            window.location.href = '/login'
+        }
+    }).catch(err => {
+        alert('Đã sảy ra lỗi không xác định!');
+        console.error('error: ', err)
+    });
+}
+
+
 function topUp(amount) {
     fetch("/create_top_up", {
         method: 'POST',
