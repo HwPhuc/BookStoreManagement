@@ -97,6 +97,7 @@ Nhà sách - {{book.name}}
                     <select class="form-select bg-sp" id="paymentMethod">
                         <option value="credit">Thẻ tín dụng</option>
                         <option value="cash">Thanh toán tại cửa hàng</option>
+                        <option value="balance">Tiền trong ví</option>
                     </select>
                 </div>
                 <div class="mb-3">
@@ -169,7 +170,6 @@ Nhà sách - {{book.name}}
 <script>
     // Lắng nghe sự kiện click vào nút "Xác nhận mua hàng"
     document.getElementById("paymentInBook").addEventListener("click", function() {
-
         let quantity = document.getElementById("quantity").value;
         let paymentMethod = document.getElementById("paymentMethod").value;
 
@@ -181,11 +181,16 @@ Nhà sách - {{book.name}}
                 alert("Xin lỗi, chúng tôi không còn đủ số lượng cho bạn\nSản phẩm trong kho: {{book.stock_quantity}}");
                 document.getElementById("quantity").value = {{book.stock_quantity}};
             } else {
-                if (paymentMethod == "credit") {
+                if (paymentMethod === "credit") {
                     payment({{ book.id }}, quantity, null) // gửi api cho server rồi server gọi api stripe thanh toán
                 }
-                if (paymentMethod == "cash") {
+                if (paymentMethod === "cash") {
                     checkoutOffline({{ book.id }}, quantity, null)
+                    var myModal = bootstrap.Modal.getInstance(document.getElementById('muaNgayModal'));
+                    myModal.hide();
+                }
+                if (paymentMethod === "balance") {
+                    paymentWithBalance({{ book.id }}, quantity, null);
                     var myModal = bootstrap.Modal.getInstance(document.getElementById('muaNgayModal'));
                     myModal.hide();
                 }

@@ -91,6 +91,7 @@
                         <select class="form-select" id="paymentMethod" onchange="toggleCreditFields()">
                             <option value="credit">Thẻ tín dụng</option>
                             <option value="cash">Thanh toán tại cửa hàng</option>
+                            <option value="balance">Tiền trong ví</option>
                         </select>
                     </div>
                     <div id="creditFields" class="">
@@ -153,8 +154,16 @@
                     payment(null, null, {{ current_user.id }});
                     return;
                 }
+
                 if (paymentMethod == "cash") {
                     checkoutOffline(null, null, {{ current_user.id }});
+                    var myModal = bootstrap.Modal.getInstance(document.getElementById('muaNgayModal'));
+                    myModal.hide();
+                    return;
+                }
+
+                if (paymentMethod == "balance") {
+                    paymentWithBalance(null, null, {{ current_user.id }});
                     var myModal = bootstrap.Modal.getInstance(document.getElementById('muaNgayModal'));
                     myModal.hide();
                     return;
