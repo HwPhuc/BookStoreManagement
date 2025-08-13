@@ -439,6 +439,17 @@ def top_up(user_id, amount):
     return
 
 
+def reduce_balance_payment(user_id, amount):
+    user = User.query.get(user_id)
+    user.balance -= amount
+
+    wallet_log = WalletLog(transaction_type=TransactionType.PAYMENT, amount=amount, balance_after=user.balance, user_id=user_id)
+    db.session.add(wallet_log)
+
+    db.session.commit()
+    return
+
+
 def add_top_up_log(amount, user_id, balance_after):
     wallet_log = WalletLog(transaction_type=TransactionType.TOP_UP, amount=amount, balance_after=balance_after, user_id=user_id)
     db.session.add(wallet_log)

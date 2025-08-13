@@ -12,14 +12,12 @@ from SaleBook.models import UserRole
 import cloudinary
 from datetime import datetime, timedelta
 
-
 # Cấu hình Cloudinary
 cloudinary.config(
     cloud_name='drzc4fmxb',
     api_key='422829951512966',
     api_secret='ILJ11vG7Q7OqbjxyhWS1lNJMN5U'
 )
-
 
 login_manager.login_view = "/login"
 
@@ -167,7 +165,7 @@ def product_detail(book_name):
         return render_template('err_auth.html', err='Url này có vẻ không tồn tại!')
 
 
-#New
+# New
 # @app.route('/product/<int:book_id>/<book_name>')
 # def product_detail(book_id, book_name):
 #     book = dao.get_book_by_id(book_id)
@@ -212,7 +210,7 @@ def check_auth():
     return jsonify({'is_authenticated': current_user.is_authenticated})
 
 
-#Done
+# Done
 @app.route('/api/carts', methods=['POST'])
 def add_to_cart_api():
     if not current_user.is_authenticated:
@@ -304,6 +302,57 @@ def common_response():
     }
 
 
+@app.route('/api/checkout_by_balance', methods=['POST'])
+def checkout_by_balance():
+    if not current_user.is_authenticated:
+        return jsonify({"error": "User not authenticated"}), 401  # Nếu người dùng chưa đăng nhập
+
+    data = request.get_json()
+    book_id = data.get('book_id')
+    quantity = data.get('quantity')
+    user_id = data.get('customer_id')
+
+    # if not book_id or not quantity:
+    #     return jsonify({"error": "Invalid data"}), 400
+
+    if user_id:
+        cart = dao.get_all_cart(customer_id=user_id)
+        total_price = 0
+
+        for c in cart:
+            unit_price = float(dao.get_book_by_id(c.book_id).price)
+            quantity = int(c.quantity)
+            total_price += (unit_price * quantity)
+
+        if float(current_user.balance) < total_price:
+            return jsonify({"error": "Không đủ tiền trong ví"}), 402
+
+        order = dao.add_order_online(customer_id=current_user.id)
+
+        for c in cart:
+            unit_price = dao.get_book_by_id(c.book_id).price
+            dao.add_order_detail(order_id=order.id, book_id=c.book_id, quantity=c.quantity,
+                                 unit_price=unit_price)
+            dao.reduce_book_bought(book_id=c.book_id, quantity=c.quantity)
+
+        dao.reduce_balance_payment(user_id=current_user.id, amount=total_price)
+        dao.remove_all_cart_by_userid(current_user.id)
+        return jsonify({'success': 'Đơn hàng đã được ghi nhận'}), 201
+    else:
+        book = dao.get_book_by_id(book_id)
+        total_price = float(book.price) * int(quantity)
+
+        if float(current_user.balance) < total_price:
+            return jsonify({"error": "Không đủ tiền trong ví"}), 402
+
+        order = dao.add_order_online(customer_id=current_user.id)
+        dao.add_order_detail(order_id=order.id, book_id=book_id, quantity=quantity, unit_price=book.price)
+        dao.reduce_book_bought(book_id=book.id, quantity=quantity)
+        dao.reduce_balance_payment(user_id=current_user.id, amount=total_price)
+
+        return jsonify({'success': 'Đơn hàng đã được ghi nhận'}), 201
+
+
 @app.route('/api/checkout_in_store', methods=['POST'])
 def checkout_in_store():
     """
@@ -338,7 +387,6 @@ def checkout_in_store():
             dao.reduce_book_bought(book_id=book.id, quantity=quantity)
             print(order.time_to_cancel)
             return jsonify({'success': 'Đơn hàng đã được ghi nhận'}), 200
-
         else:
             return jsonify({'error': 'Invalid'}), 404
     else:
@@ -995,10 +1043,12 @@ schedule.every(1).minute.do(cancel_order_with_app_context)
 
 stop_run_continuously = run_continuously()
 
+
 @atexit.register
 def shutdown_schedule():
     print('Shutdown schedule before app shutdown')
     stop_run_continuously.set()
+
 
 if __name__ == "__main__":
     try:
