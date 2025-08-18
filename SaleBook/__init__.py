@@ -17,7 +17,7 @@ app = Flask(
 app.secret_key = "Us8k2s2@#*$jjudj^8&**tgfsgYFS677*&6s8suuuu"
 # app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/bookstorev2?charset=utf8mb4" % quote('Admin@123')
 # app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://sql12794608:%s@sql12.freesqldatabase.com/sql12794608?charset=utf8mb4" % quote('IyrpXPeJrh')
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://sql12795334:S637rmBLXH@sql12.freesqldatabase.com:3306/sql12795334?charset=utf8mb4" % quote('S637rmBLXH')
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://sql12795334:S637rmBLXH@sql12.freesqldatabase.com:3306/sql12795334?charset=utf8mb4"
 app.config["PAGE_SIZE"] = 8
 
 db = SQLAlchemy(app=app)
