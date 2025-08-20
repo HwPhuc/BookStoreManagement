@@ -288,7 +288,8 @@ def change_cart_quantity(cart_id, quantity):
 # Thêm một order
 def add_order_online(customer_id):
     """Place an order on the website (online). Then pay for it."""
-    order = Order(customer_id=customer_id, is_paid=True, order_type=OrderType.ONLINE, is_shipped=False,status=OrderStatus.PENDING)
+    # order = Order(customer_id=customer_id, is_paid=True, order_type=OrderType.ONLINE, is_shipped=False,status=OrderStatus.PENDING)
+    order = Order(customer_id=customer_id, is_paid=True, order_type=OrderType.ONLINE, is_shipped=False,status=OrderStatus.SUCCESS)
     db.session.add(order)
     db.session.commit()
     return order
